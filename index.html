@@ -231,6 +231,9 @@
   .landing-signup h2{font-size:20px;margin:6px 0 4px;}
   .landing-signup-segments{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:500px;margin:0 auto;}
   .landing-signup-segments .chip{padding:8px 14px;font-size:11px;}
+  .landing-signup-restaurant-divider{text-align:center;margin:16px auto 10px;}
+  .landing-signup-restaurant-divider span{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);letter-spacing:0.05em;}
+  .chip-restaurant{border-color:var(--warn);}
   .segment-icon{display:inline-flex;width:52px;height:52px;align-items:center;justify-content:center;background:var(--ink);color:#fff;font-size:17px;margin-bottom:14px;}
   .segment-card b{display:block;font-family:'Oswald',sans-serif;font-size:15px;}
   .segment-card span{display:block;color:var(--ink-soft);margin:8px 0 12px;font-size:12.5px;line-height:1.4;}
@@ -240,6 +243,14 @@
   @media(max-width:700px){.segment-grid{grid-template-columns:1fr;}}
 
   .programs-section{max-width:900px;margin:0 auto 42px;}
+
+  .landing-expect{max-width:900px;margin:0 auto 42px;}
+  .landing-expect h2{font-family:'Oswald',sans-serif;font-size:22px;margin:8px 0 24px;text-align:center;}
+  .landing-expect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .landing-expect-card{padding:20px;border:1.5px solid var(--rule);background:var(--panel);}
+  .landing-expect-card b{display:block;font-family:'Oswald',sans-serif;font-size:14.5px;margin-bottom:8px;color:var(--usable);}
+  .landing-expect-card span{display:block;color:var(--ink-soft);font-size:12.5px;line-height:1.5;}
+  @media (max-width:700px){.landing-expect-grid{grid-template-columns:1fr;}}
   .programs-eyebrow{text-align:center;}
   .programs-title{text-align:center;font-family:'Oswald',sans-serif;font-size:22px;margin:8px 0 6px;}
   .programs-sub{text-align:center;color:var(--ink-soft);font-size:13px;margin-bottom:28px;}
@@ -267,7 +278,7 @@
     <div class="landing-hero">
       <svg class="landing-mark" width="56" height="56" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5.5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5.5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>
       <div style="text-align:center;margin-bottom:6px;">
-        <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;letter-spacing:0.02em;color:var(--ink);text-transform:uppercase;">WHOLAMINO</div>
+        <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;letter-spacing:0.02em;color:var(--ink);">WholAmino</div>
         <div class="onboard-eyebrow" style="margin-bottom:0;margin-top:2px;font-weight:700;">NUTRITION &amp; METABOLIC INTELLIGENCE</div>
       </div>
       <h1>Know what your food<br><span>is really doing for you.</span></h1>
@@ -275,8 +286,28 @@
     </div>
     <div class="landing-proof">
       <div><strong>9</strong><span>FREE LOGS</span></div>
+      <div><strong>60+</strong><span>DISHES RECOGNIZED</span></div>
       <div><strong>1</strong><span>INTEGRATED ENGINE</span></div>
       <div><strong>4</strong><span>WAYS TO USE IT</span></div>
+    </div>
+
+    <div class="landing-expect">
+      <div class="onboard-eyebrow" style="text-align:center;">WHAT TO EXPECT</div>
+      <h2 style="text-align:center;">Built for how India actually eats</h2>
+      <div class="landing-expect-grid">
+        <div class="landing-expect-card">
+          <b>Transparent, not just confident</b>
+          <span>When something you typed isn't fully recognized, you'll see exactly what matched and what didn't — never a silent guess presented as certain.</span>
+        </div>
+        <div class="landing-expect-card">
+          <b>Real data, clearly sourced</b>
+          <span>Every dish is built from published nutrition data. Where a recipe genuinely varies (a chutney, a home-style curry), that's stated — not hidden behind false precision.</span>
+        </div>
+        <div class="landing-expect-card">
+          <b>Always expanding</b>
+          <span>The dish library grows from what real people actually log — regional dishes, home recipes, different spellings — not a fixed list written once and left alone.</span>
+        </div>
+      </div>
     </div>
 
     <div class="programs-section">
@@ -316,22 +347,22 @@
       <h2>What brings you to WholAmino?</h2>
       <p style="color:var(--ink-soft);font-size:13px;">Choose your mode. You can switch segments later.</p>
       <div class="segment-grid">
-        <button class="segment-card" style="cursor:default;">
+        <button class="segment-card" onclick="pickLandingSignupSegment('HOME')">
           <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 13h20"/></svg></span><b>WORKING PROFESSIONALS</b>
           <span>Everyday nutrition for a sedentary work life, plus evidence-backed post-meal habits for metabolic health — your own meals, or anyone in your home.</span><em>Find the nutrition gap →</em>
         </button>
-        <button class="segment-card" style="cursor:default;">
+        <button class="segment-card" onclick="pickLandingSignupSegment('GYM')">
           <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M4 9.5h2.5v5H4z"/><path d="M17.5 9.5H20v5h-2.5z"/><path d="M9 12h6"/></svg></span><b>GYM / YOGA</b>
           <span>Protein target + food tracking + training progress.</span><em>Train. Eat. Track. Progress. →</em>
         </button>
-        <button class="segment-card" style="cursor:default;">
+        <button class="segment-card" onclick="pickLandingSignupSegment('SPORTS')">
           <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-2 7H9L7 4Z"/><circle cx="12" cy="16" r="5"/><path d="M12 13v3l2 1.5"/></svg></span><b>SPORTS · ATHLETES</b>
           <span>Training nutrition + hydration + sleep.</span><em>Fuel performance. Recover better. →</em>
         </button>
       </div>
       <div style="max-width:900px;margin:22px auto 0;padding-top:18px;border-top:1px solid var(--rule);text-align:center;">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.06em;">RUNNING A RESTAURANT? DIFFERENT TOOL, NOT A DAILY PROGRAM</span>
-        <button class="segment-card" style="max-width:420px;margin:12px auto 0;display:block;text-align:left;cursor:default;">
+        <button class="segment-card" onclick="pickLandingSignupSegment('RESTAURANT')" style="max-width:420px;margin:12px auto 0;display:block;text-align:left;">
           <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6a2 2 0 0 0 2 2v12"/><path d="M3 2v6"/><path d="M6 2v6"/><path d="M6 10v12"/><path d="M19 2 15 9v13"/><path d="M15 9h4"/></svg></span><b>RESTAURANT — MENU AUDIT</b>
           <span>Free to audit any dish. A full report on your existing "healthy menu" — ₹499, not a subscription or daily program.</span><em>Make your menu stronger →</em>
         </button>
@@ -345,7 +376,12 @@
           <button class="chip" onclick="pickLandingSignupSegment('HOME')" id="landingSeg-HOME">Working Professionals</button>
           <button class="chip" onclick="pickLandingSignupSegment('GYM')" id="landingSeg-GYM">Gym / Yoga</button>
           <button class="chip" onclick="pickLandingSignupSegment('SPORTS')" id="landingSeg-SPORTS">Sports · Athletes</button>
-          <button class="chip" onclick="pickLandingSignupSegment('RESTAURANT')" id="landingSeg-RESTAURANT">Restaurant</button>
+        </div>
+        <div class="landing-signup-restaurant-divider">
+          <span>OR, IF YOU'RE RUNNING A RESTAURANT</span>
+        </div>
+        <div class="landing-signup-segments">
+          <button class="chip chip-restaurant" onclick="pickLandingSignupSegment('RESTAURANT')" id="landingSeg-RESTAURANT">Restaurant — Menu Audit</button>
         </div>
         <div class="login-field" style="max-width:420px;margin:16px auto 0;">
           <label>EMAIL</label>
@@ -856,7 +892,7 @@ function generateReportPDF(sub, m){
   const pageWidth = 170; // usable width in mm, given 20mm margins on A4
   const label = PROGRAM_LABELS[sub.plan_type].name;
   let y = 22;
-  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text('WHOLAMINO', 20, y);
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text('WholAmino', 20, y);
   doc.setFontSize(11); doc.setTextColor(120); doc.text('Nutrition & Metabolic Intelligence', 20, y+6);
   doc.setTextColor(0); y += 20;
   doc.setFontSize(15); doc.text(`${label} — Program Summary`, 20, y); y += 8;
@@ -1173,6 +1209,11 @@ async function syncMealInsert(entry){
     score: entry.score, tier: entry.tier, limiting_aa: entry.limitingAA, limiting_aa_label: entry.limitingAALabel,
     fiber_g: entry.fiberG||0, meal_slot: entry.mealSlot, segment: state.segment,
     moved_after_meal: entry.movedAfterMeal || false, mobility_type: entry.mobilityType || null,
+    // Persisted so real search patterns can be reviewed later, instead of
+    // only ever showing once on the result screen and then being lost —
+    // this is the actual signal needed to prioritize which dishes to add
+    // next, rather than guessing.
+    original_query: entry.originalQuery || null, had_gap: entry.hadGap || false,
   }).select().single();
   if(error){ console.error('Meal sync failed:', error); return null; }
   return data.id;
@@ -1190,6 +1231,7 @@ async function syncMealUpdate(id, entry){
     name: entry.name, claimed_g: entry.claimedG, usable_g: entry.usableG,
     score: entry.score, tier: entry.tier, limiting_aa: entry.limitingAA, limiting_aa_label: entry.limitingAALabel,
     fiber_g: entry.fiberG||0, moved_after_meal: entry.movedAfterMeal||false, mobility_type: entry.mobilityType||null,
+    original_query: entry.originalQuery || null, had_gap: entry.hadGap || false,
   }).eq('id', id);
   if(error) console.error('Meal update sync failed:', error);
 }
@@ -1257,6 +1299,11 @@ function pickLandingSignupSegment(s){
     : "Continue without an account (data won't be saved)";
   document.getElementById('landingStatus').classList.remove('show');
   document.getElementById('landingError').classList.remove('show');
+  // Ties the card someone just read to the (now pre-selected) chip below —
+  // without this, the connection between "I read this card" and "this chip
+  // is now selected" only exists if the person happens to scroll down and
+  // notice on their own.
+  document.querySelector('.landing-signup').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function landingContinue(){
@@ -1385,6 +1432,21 @@ const SOURCES = {
   peas:{name:"Green Peas",digestibility:.88,protein_per_100g:5.4,fiber_per_100g:5.1,profile:{His:25,Ile:43,Leu:68,Lys:60,SAA:28,AAA:77,Thr:36,Trp:10,Val:50}},
   veg:{name:"Mixed Vegetables",digestibility:.85,protein_per_100g:2.5,fiber_per_100g:2.5,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
   millet:{name:"Millet",digestibility:.83,protein_per_100g:3.5,fiber_per_100g:3.8,profile:{His:25,Ile:40,Leu:69,Lys:30,SAA:35,AAA:82,Thr:31,Trp:11,Val:53}},
+  // Coconut chutney specifically (most common pairing with idli/dosa) — published
+  // sources vary 0.8-5g protein/100g depending on exact recipe (dal tempering,
+  // ratio of coconut to water), so this is a middle-ground estimate, not a
+  // precise single-recipe measurement. Amino profile derived from coconut's own
+  // published composition (the dominant protein source in the dish), scaled to
+  // this protein level.
+  chutney:{name:"Coconut Chutney",digestibility:.75,protein_per_100g:2.0,fiber_per_100g:1.5,profile:{His:23,Ile:39,Leu:74,Lys:44,SAA:38,AAA:82,Thr:36,Trp:12,Val:61}},
+  // Roasted papad (lentil/chickpea flour) — full amino acid profile from
+  // published USDA-sourced data, converted to mg per g protein.
+  papad:{name:"Papad",digestibility:.79,protein_per_100g:25.6,fiber_per_100g:18.6,profile:{His:28,Ile:51,Leu:83,Lys:66,SAA:24,AAA:89,Thr:35,Trp:10,Val:56}},
+  // Pickle/achar — protein is genuinely negligible regardless of exact recipe
+  // (oil, spice, and vegetable/fruit base), so this is a conservative rough
+  // default rather than a precisely sourced figure; its contribution to any
+  // score is minimal either way.
+  pickle:{name:"Pickle/Achar",digestibility:.70,protein_per_100g:1.0,fiber_per_100g:2.0,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
 
   // --- Added after real user testing surfaced Caesar salad wasn't recognized ---
   lettuce:{name:"Lettuce",digestibility:.85,protein_per_100g:1.2,fiber_per_100g:2.1,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
@@ -1436,7 +1498,7 @@ function tierForScore(score) {
 function tierClass(tier){ return tier==="COMPLETE"?"complete":tier==="STRONG"?"strong":"gap"; }
 
 const INGREDIENT_ALIASES = {
-  paneer:"paneer", tofu:"tofu", rice:"rice", dal:"toor", toor:"toor", toordal:"toor", chana:"chana", chickpea:"chana",
+  paneer:"paneer", tofu:"tofu", rice:"rice", dal:"toor", dhal:"toor", toor:"toor", toordal:"toor", chana:"chana", chickpea:"chana",
   moong:"moong", rajma:"rajma", curd:"yogurt", yogurt:"yogurt", egg:"egg", chicken:"chicken", fish:"fish",
   soy:"soy", soya:"soy", wheat:"wheat", atta:"wheat", peanut:"peanut", veg:"veg", vegetables:"veg", vegetable:"veg",
   millet:"millet", besan:"besan", ragi:"ragi", oats:"oats", poha:"poha", potato:"potato", peas:"peas",
@@ -1472,7 +1534,7 @@ function runAudit(){
     return;
   }
   if(unmatched.length){
-    const proceed = confirm(`These lines weren't recognized and will be left OUT of the score, so the result may be incomplete:\n\n${unmatched.join('\n')}\n\nContinue anyway?`);
+    const proceed = confirm(`These lines weren't recognized and are left OUT of the score for now — we track what's not yet recognized to keep expanding for real Indian meals:\n\n${unmatched.join('\n')}\n\nContinue anyway?`);
     if(!proceed) return;
   }
   const r = computeScoreFromGrams(items, declared);
@@ -1497,6 +1559,28 @@ function fillAuditFrom(name, recipe){
 // ---- Dish library ----
 const DISHES = [
   ["Caesar Salad (with chicken)", [["chicken",100],["lettuce",80],["parmesan",20],["croutons",25],["dressing",20]]],
+  // --- Common meal-completion items, previously unrecognized on their own ---
+  // (typically eaten alongside a main item, not as a meal by themselves —
+  // added so "roti with pickle", "idli with chutney" etc. no longer silently
+  // fail to recognize these words at all)
+  ["Chutney", [["chutney",30]]],
+  ["Papad", [["papad",10]]],
+  ["Pickle", [["pickle",15]]],
+  // Yogurt-based side, using the SAME yogurt/veg nutrition data already used
+  // elsewhere — no new ingredient data needed, this one's fully accurate.
+  // Standalone plain dal — without this, a bare "dal"/"dhal" query could
+  // score just high enough (via shared "toor" token after synonym mapping)
+  // to match a compound dish like "Dal Khichdi" instead — a completely
+  // different dish with rice and moong mixed in, not what someone meant by
+  // just "dal" on its own.
+  ["Dal", [["toor",150]]],
+  ["Raita", [["yogurt",100],["veg",20]]],
+  // Explicit entry so this can't be silently mismatched to "Veg Fried Rice" —
+  // without this, "paneer fried rice" scores high enough on shared words
+  // ("fried", "rice") to match the veg version instead, silently dropping
+  // paneer's protein contribution with no clear warning that it was
+  // substituted rather than just partially skipped.
+  ["Paneer Fried Rice", [["paneer",100],["rice",200],["veg",50]]],
   // --- South Indian, beyond idli/dosa/upma ---
   ["Uttapam + Sambar", [["dosa",150],["toor",120],["veg",70]]],
   ["Curd Rice", [["rice",180],["yogurt",150],["veg",30]]],
@@ -1647,6 +1731,7 @@ function computeTargets(){
 // far more common than the English "vegetable" our dish names actually use.
 const QUERY_SYNONYMS = {
   sabji:"vegetable", sabzi:"vegetable", subzi:"vegetable", subji:"vegetable", sabjee:"vegetable",
+  achar:"pickle",
   chawal:"rice", anda:"egg", dahi:"curd",
 };
 
@@ -1709,18 +1794,27 @@ function findCountableUnitMatch(query){
 
   const recipe = [[unit.source, Math.round(count * unit.gramsPerUnit)]];
   const nameParts = [`${count} ${unitWord}`];
-  const unmatchedParts = [];
+  let partsMatched = 1; // the counted unit itself always counts as matched
+  let partsTotal = 1;
 
   if(remainder){
     const restMatch = findDishCombo(remainder);
-    if(restMatch && restMatch.partsMatched === restMatch.partsTotal){
-      // Skip any ingredient in the remainder match that's the SAME source as
-      // the counted unit (e.g. "sambar" matching a preset that itself bundles
-      // idli) — the explicit count is authoritative, don't double it up.
+    if(restMatch){
+      // Credit whatever DID match in the remainder, even if not every part
+      // of it matched. This used to require ALL remainder parts to match
+      // before accepting ANY of them — silently dropping real items like
+      // "roti" and "curd" just because one unrelated part ("chutney", a
+      // condiment with no dedicated dish entry) didn't match on its own.
+      // Now partial matches are credited, and the "Only recognized X of Y
+      // items" confirmation below correctly reflects exactly what was and
+      // wasn't picked up, instead of silently discarding real food.
       restMatch.recipe.filter(ing => ing[0] !== unit.source).forEach(ing => recipe.push(ing));
       nameParts.push(restMatch.name);
+      partsMatched += restMatch.partsMatched;
+      partsTotal += restMatch.partsTotal;
     } else {
-      unmatchedParts.push(remainder);
+      // Nothing in the remainder matched at all.
+      partsTotal += 1;
     }
   }
 
@@ -1728,8 +1822,8 @@ function findCountableUnitMatch(query){
     name: nameParts.join(' + '),
     recipe,
     combo: nameParts.length > 1,
-    partsMatched: unmatchedParts.length ? 1 : (remainder ? 2 : 1),
-    partsTotal: remainder ? 2 : 1,
+    partsMatched,
+    partsTotal,
   };
 }
 
@@ -2143,12 +2237,12 @@ function renderDishBrowser(){
   }).join('') || '<div class="empty-note">No dishes match.</div>';
 }
 
-function logMealToSlot(name, recipe, slot, originalQuery){
+function logMealToSlot(name, recipe, slot, originalQuery, hadGap){
   const blend = recipe.map(([s,g])=>({source:s,grams:g}));
   const r = computeScoreFromGrams(blend);
   if(!r) return;
   const tier = tierForScore(r.score);
-  const entry = { name, ...r, tier, time: new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), mealSlot: slot, originalQuery: originalQuery || null };
+  const entry = { name, ...r, tier, time: new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), mealSlot: slot, originalQuery: originalQuery || null, hadGap: !!hadGap };
   state.pendingResult = entry;
   showResult(entry, false);
   goTab('result');
@@ -2162,11 +2256,17 @@ function logFromTextSlot(slot){
     alert("No close match found in the dish library. Try \"Not in the list?\" below to enter it as ingredients instead.");
     return;
   }
-  if(match.partsMatched < match.partsTotal){
-    const proceed = confirm(`Only recognized ${match.partsMatched} of ${match.partsTotal} items in "${queryText}" — matched: ${match.name}. The rest will be left out of the score. Continue anyway?`);
+  const hadGap = match.partsMatched < match.partsTotal;
+  if(hadGap){
+    const proceed = confirm(`Recognized ${match.partsMatched} of ${match.partsTotal} items in "${queryText}" — matched: ${match.name}. The rest is left out of today's score, but we track what's not yet recognized to keep expanding for real Indian meals. Continue anyway?`);
     if(!proceed) return;
   }
-  logMealToSlot(match.name, match.recipe, slot, queryText);
+  // hadGap is the actual "something was missing" signal — worth keeping
+  // separate from originalQuery alone, since that field also fires for
+  // fully-matched entries that were just typed differently than the
+  // canonical dish name. Querying specifically WHERE had_gap = true is what
+  // surfaces genuine database gaps, not reworded-but-complete matches.
+  logMealToSlot(match.name, match.recipe, slot, queryText, hadGap);
   input.value = '';
 }
 
@@ -2183,7 +2283,7 @@ function logCustomToSlot(slot){
     return;
   }
   if(unmatched.length){
-    const proceed = confirm(`These lines weren't recognized and will be left OUT of the score, so the result may be incomplete:\n\n${unmatched.join('\n')}\n\nContinue anyway?`);
+    const proceed = confirm(`These lines weren't recognized and are left OUT of the score for now — we track what's not yet recognized to keep expanding for real Indian meals:\n\n${unmatched.join('\n')}\n\nContinue anyway?`);
     if(!proceed) return;
   }
   const r = computeScoreFromGrams(items);
