@@ -673,17 +673,9 @@ yogurt 40"></textarea>
       <label>EMAIL</label>
       <input type="email" id="loginEmail" placeholder="you@example.com">
     </div>
-    <div class="login-field" id="reviewerPasswordField" style="display:none;">
-      <label>PASSWORD</label>
-      <input type="password" id="loginPassword" placeholder="••••••••">
-    </div>
     <button class="onboard-btn" onclick="sendMagicLink()" id="loginBtn">SEND SIGN-IN LINK →</button>
-    <button class="onboard-btn" onclick="reviewerSignIn()" id="reviewerBtn" style="display:none;margin-top:8px;">SIGN IN →</button>
     <div class="login-status" id="loginStatus">Check your email for a sign-in link.</div>
     <div class="login-error" id="loginError"></div>
-    <div style="text-align:center;margin-top:14px;">
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="toggleReviewerLogin()" id="reviewerToggle">Sign in with a password instead</span>
-    </div>
     <div id="skipAccountRestaurant" style="display:none;margin-top:18px;">
       <button class="log-send" onclick="continueWithoutAccount()" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);">TRY A FREE DISH AUDIT — NO SIGN-UP →</button>
       <div style="text-align:center;margin-top:8px;font-size:9.5px;color:var(--ink-soft);">You'll only need to sign in to save your menu or buy the full report.</div>
@@ -709,32 +701,6 @@ let sb = null;
 let currentUser = null;
 if(SUPABASE_CONFIGURED && window.supabase){
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-
-function toggleReviewerLogin(){
-  const showingPassword = document.getElementById('reviewerPasswordField').style.display === 'block';
-  document.getElementById('reviewerPasswordField').style.display = showingPassword ? 'none' : 'block';
-  document.getElementById('loginBtn').style.display = showingPassword ? 'block' : 'none';
-  document.getElementById('reviewerBtn').style.display = showingPassword ? 'none' : 'block';
-  document.getElementById('reviewerToggle').textContent = showingPassword ? 'Sign in with a password instead' : 'Use email link instead';
-  document.getElementById('loginStatus').classList.remove('show');
-  document.getElementById('loginError').classList.remove('show');
-}
-
-async function reviewerSignIn(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errorEl = document.getElementById('loginError');
-  errorEl.classList.remove('show');
-  if(!email || !password){ errorEl.textContent = "Enter both email and password."; errorEl.classList.add('show'); return; }
-  if(!sb){ errorEl.textContent = "Backend not configured yet."; errorEl.classList.add('show'); return; }
-  const btn = document.getElementById('reviewerBtn');
-  btn.textContent = "SIGNING IN...";
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  btn.textContent = "SIGN IN →";
-  if(error){ errorEl.textContent = error.message; errorEl.classList.add('show'); return; }
-  // On success, Supabase's onAuthStateChange (already wired elsewhere in this file)
-  // picks up the new session automatically, same as the magic-link path.
 }
 
 async function sendMagicLink(){
