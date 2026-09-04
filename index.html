@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>WholAmino</title>
+<meta name="theme-color" content="#141414">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="WholAmino">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F5F4F0; --panel:#FFFFFF; --ink:#141414; --ink-soft:#4B4B47;
+    --rule:#D8D6CE; --claimed:#B23A2E; --usable:#1F6F5C; --usable-bg:#E8F1EC;
+    --claimed-bg:#F7E9E7; --warn:#8A6D1D; --warn-bg:#FDF2D0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:#E8E7E1;font-family:'Inter',sans-serif;overscroll-behavior:none;}
+  .display{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.02em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  #app-shell{max-width:420px;margin:0 auto;height:100vh;background:var(--paper);display:none;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(0,0,0,0.15);}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 20px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--ink);flex-shrink:0;background:var(--paper);}
+
+  .screen{flex:1;overflow-y:auto;padding:0 16px 16px;display:none;}
+  .screen.active{display:block;}
+
+  .app-header{display:flex;justify-content:space-between;align-items:center;padding:6px 0 14px;position:sticky;top:0;background:var(--paper);z-index:5;}
+  .app-logo{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.02em;display:flex;align-items:center;gap:6px;}
+  .app-logo span{color:var(--usable);}
+  .brand-mark{flex-shrink:0;}
+  .landing-mark{display:block;margin:0 auto 14px;}
+  .segment-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;background:var(--ink);color:#fff;padding:6px 10px;letter-spacing:0.05em;border:none;}
+
+  .segment-switcher{display:flex;gap:4px;margin-bottom:14px;}
+  .segment-btn{flex:1;text-align:center;padding:10px 2px;border:1.5px solid var(--ink);background:var(--panel);font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;cursor:pointer;color:var(--ink-soft);}
+  .segment-btn.active{background:var(--ink);color:#fff;}
+  .segment-btn:active{background:var(--usable);color:#fff;}
+
+  .pillars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
+  .pillar{background:var(--panel);border:1px solid var(--rule);padding:10px 8px;}
+  .pillar .lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink-soft);letter-spacing:0.04em;margin-bottom:4px;}
+  .pillar .val{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;color:var(--ink);}
+  .pillar .of{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink-soft);}
+  .pillar-bar{height:3px;background:#EDECE6;margin-top:6px;}
+  .pillar-fill{height:100%;transition:width 0.3s;}
+  .pillar-add{display:flex;gap:4px;margin-top:6px;}
+  .pillar-add button{flex:1;font-family:'IBM Plex Mono',monospace;font-size:8px;border:1px solid var(--rule);background:#fbfaf7;padding:3px;cursor:pointer;color:var(--ink-soft);}
+
+  .log-box{background:var(--panel);border:1.5px solid var(--ink);padding:12px;margin-bottom:14px;}
+  .log-box input{width:100%;border:none;outline:none;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);background:transparent;padding:4px 0;}
+  .log-box input::placeholder{color:#A8A69E;}
+  .log-send{margin-top:8px;width:100%;background:var(--ink);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:11px;letter-spacing:0.04em;cursor:pointer;}
+  .log-send:active{background:var(--usable);}
+
+  .section-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);letter-spacing:0.06em;margin:14px 0 8px;}
+  .chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:9.5px;border:1px solid var(--rule);background:var(--panel);padding:7px 10px;color:var(--ink-soft);cursor:pointer;}
+  .chip:active{background:var(--ink);color:#fff;}
+
+  .activity-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--rule);cursor:pointer;}
+  .activity-row:last-child{border-bottom:none;}
+  .activity-name{font-size:12.5px;font-weight:600;color:var(--ink);}
+  .activity-time{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--ink-soft);}
+  .mini-badge{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;padding:3px 8px;}
+  .mini-badge.complete{background:var(--usable-bg);color:var(--usable);}
+  .mini-badge.strong{background:var(--warn-bg);color:var(--warn);}
+  .mini-badge.gap{background:var(--claimed-bg);color:var(--claimed);}
+  .empty-note{font-size:11.5px;color:var(--ink-soft);padding:20px 0;text-align:center;}
+
+  .back-row{display:flex;align-items:center;gap:8px;padding:6px 0 12px;position:sticky;top:0;background:var(--paper);cursor:pointer;}
+  .back-arrow{font-size:18px;color:var(--ink);}
+  .result-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;}
+  .split-box{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--ink);margin-bottom:2px;}
+  .split-half{padding:16px 12px;}
+  .split-half.claimed{background:var(--claimed-bg);border-right:1px solid var(--rule);}
+  .split-half.usable{background:var(--usable-bg);}
+  .split-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;margin-bottom:4px;}
+  .split-half.claimed .split-lbl{color:var(--claimed);}
+  .split-half.usable .split-lbl{color:var(--usable);}
+  .split-num{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;}
+  .split-half.claimed .split-num{color:var(--claimed);}
+  .split-half.usable .split-num{color:var(--usable);}
+  .strip{border:1.5px solid var(--ink);border-top:none;padding:10px 12px;background:#F2F1EB;font-family:'IBM Plex Mono',monospace;font-size:10.5px;margin-bottom:14px;}
+  .strip div{margin-top:3px;} .strip div:first-child{margin-top:0;}
+  .fix-card{background:var(--panel);border:1px solid var(--rule);padding:12px;margin-bottom:12px;}
+  .fix-card .h{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);margin-bottom:4px;}
+  .fix-card p{font-size:12px;margin:0;color:var(--ink);}
+  .conf-row{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .conf-badge{font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:4px 8px;}
+  .conf-note{font-size:10px;color:var(--ink-soft);}
+  .coverage-row{margin-bottom:6px;}
+  .coverage-top{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9px;}
+  .coverage-track{height:5px;background:#EDECE6;margin-top:2px;}
+  .coverage-fill{height:100%;}
+  .save-btn{width:100%;background:var(--ink);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:13px;letter-spacing:0.04em;margin-top:6px;cursor:pointer;}
+  .save-btn:active{background:var(--usable);}
+  .save-btn:disabled{background:#B8B6AC;}
+
+  .week-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .week-stat{text-align:center;background:var(--panel);border:1px solid var(--rule);padding:10px 4px;}
+  .week-stat b{display:block;font-family:'Oswald',sans-serif;font-size:19px;}
+  .week-stat span{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--ink-soft);}
+  .day-group-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);letter-spacing:0.06em;margin:14px 0 6px;}
+
+  .mealslot-card{background:var(--panel);border:1px solid var(--rule);padding:12px;margin-bottom:8px;}
+  .mealslot-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .mealslot-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;}
+  .mealslot-status{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;padding:3px 7px;}
+  .mealslot-row{margin-bottom:6px;}
+  .mealslot-row:last-child{margin-bottom:0;}
+  .mealslot-toprow{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;margin-bottom:3px;color:var(--ink-soft);}
+  .mealslot-track{height:5px;background:#EDECE6;}
+  .mealslot-fill{height:100%;}
+
+  .nextmeal-banner{background:var(--ink);color:#fff;padding:16px;margin-bottom:14px;}
+  .nextmeal-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#83DF52;letter-spacing:0.06em;margin-bottom:6px;}
+  .nextmeal-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;margin-bottom:10px;}
+  .nextmeal-target{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#D8D6CE;margin-bottom:12px;}
+  .nextmeal-suggestion{background:rgba(255,255,255,0.08);padding:10px 12px;margin-bottom:6px;cursor:pointer;}
+  .nextmeal-suggestion:last-child{margin-bottom:0;}
+  .nextmeal-suggestion b{display:block;font-family:'Oswald',sans-serif;font-size:13px;}
+  .nextmeal-suggestion span{display:block;font-size:10.5px;color:#B8C5BF;margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+
+  .upgrade-card{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;margin-bottom:10px;cursor:pointer;border:2px solid var(--rule);background:var(--panel);transition:transform 0.08s;}
+  .upgrade-card:active{transform:scale(0.98);}
+  .upgrade-card.habit{border-color:var(--usable);background:var(--usable-bg);}
+  .upgrade-card.transform{background:var(--ink);border-color:var(--ink);}
+  .upgrade-card.transform .upgrade-name,.upgrade-card.transform .upgrade-desc,.upgrade-card.transform .upgrade-price{color:#fff;}
+  .upgrade-badge{position:absolute;top:-9px;left:16px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:0.05em;padding:3px 8px;background:var(--usable);color:#fff;}
+  .upgrade-card.transform .upgrade-badge{background:#83DF52;color:var(--ink);}
+  .upgrade-name{font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;}
+  .upgrade-price{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;margin-top:2px;}
+  .upgrade-desc{font-size:10.5px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;margin-top:3px;}
+  .upgrade-arrow{font-size:20px;flex-shrink:0;}
+
+  .profile-card{background:var(--panel);border:1.5px solid var(--ink);padding:16px;margin-bottom:14px;display:flex;gap:12px;align-items:center;}
+  .avatar{width:44px;height:44px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;flex-shrink:0;}
+  .profile-field{margin-bottom:2px;}
+  .profile-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);display:block;}
+  .profile-field input{border:none;outline:none;font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;background:transparent;width:100%;color:var(--ink);}
+  .target-card{background:var(--panel);border:1px solid var(--rule);padding:12px;margin-bottom:10px;}
+  .target-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);}
+  .target-row:last-child{border-bottom:none;}
+  .target-name{font-size:11.5px;color:var(--ink);}
+  .target-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;}
+  .phase-toggle{display:flex;border:1.5px solid var(--ink);margin-bottom:14px;}
+  .phase-opt{flex:1;text-align:center;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;cursor:pointer;}
+  .phase-opt.active{background:var(--ink);color:#fff;}
+  .phase-opt:not(.active){color:var(--ink-soft);}
+  .settings-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule);font-size:12px;color:var(--ink);}
+  .settings-row .chev{color:var(--ink-soft);}
+  .session-note{font-size:9.5px;color:var(--ink-soft);text-align:center;margin-top:16px;font-style:italic;}
+
+  .tabbar{display:flex;border-top:1.5px solid var(--ink);background:var(--panel);flex-shrink:0;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px);}
+  .tab{flex:1;text-align:center;padding:12px 0 9px;background:none;border:none;cursor:pointer;}
+  .tab-icon{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;color:#B8B6AC;}
+  .tab.active .tab-icon{color:var(--ink);}
+  .tab-lbl{display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#B8B6AC;margin-top:4px;letter-spacing:0.03em;}
+  .tab.active .tab-lbl{color:var(--ink);font-weight:600;}
+
+  .onboard-overlay{position:absolute;inset:0;background:rgba(20,20,20,0.55);z-index:50;display:none;align-items:flex-end;}
+  .onboard-overlay.show{display:flex;}
+  .onboard-card{background:var(--paper);width:100%;padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 24px);border-top:2px solid var(--ink);}
+  .onboard-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--claimed);letter-spacing:0.06em;margin-bottom:6px;}
+  .onboard-title{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;margin-bottom:8px;}
+  .onboard-sub{font-size:12px;color:var(--ink-soft);margin-bottom:18px;line-height:1.5;}
+  .onboard-row{display:flex;gap:10px;margin-bottom:14px;}
+  .onboard-field{flex:1;}
+  .onboard-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  .onboard-field input{width:100%;border:1.5px solid var(--ink);padding:9px;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;background:var(--panel);}
+  .onboard-options{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+  .onboard-opt{border:1.5px solid var(--rule);background:var(--panel);padding:12px;cursor:pointer;}
+  .onboard-opt.selected{border-color:var(--ink);background:var(--usable-bg);}
+  .onboard-opt b{display:block;font-family:'Oswald',sans-serif;font-size:13px;}
+  .onboard-opt span{display:block;font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  .onboard-btn{width:100%;background:var(--ink);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:14px;letter-spacing:0.04em;cursor:pointer;}
+
+  .login-overlay{position:absolute;inset:0;background:var(--paper);z-index:100;display:none;flex-direction:column;justify-content:center;padding:32px 24px;}
+  .login-overlay.show{display:flex;}
+  .login-logo{font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;text-align:center;}
+  .login-logo span{color:var(--usable);}
+  .login-sub{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-bottom:28px;line-height:1.5;}
+  .login-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);display:block;margin-bottom:5px;}
+  .login-field input{width:100%;border:1.5px solid var(--ink);padding:12px;font-family:'Inter',sans-serif;font-size:14px;background:var(--panel);margin-bottom:14px;}
+  .login-status{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--usable);text-align:center;margin-top:14px;display:none;}
+  .login-status.show{display:block;}
+
+  .legal-overlay{position:fixed;inset:0;background:var(--paper);z-index:200;display:none;flex-direction:column;}
+  .legal-overlay.show{display:flex;}
+  .legal-head{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 16px) 20px 14px;border-bottom:1px solid var(--rule);flex-shrink:0;}
+  .legal-close{font-size:20px;color:var(--ink);cursor:pointer;line-height:1;}
+  .legal-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;}
+  .legal-body{flex:1;overflow-y:auto;padding:18px 20px calc(env(safe-area-inset-bottom,0px) + 24px);font-size:13px;line-height:1.6;color:var(--ink-soft);max-width:640px;margin:0 auto;width:100%;}
+  .legal-body h3{font-family:'Oswald',sans-serif;font-size:14px;color:var(--ink);margin:18px 0 6px;}
+  .legal-body h3:first-child{margin-top:0;}
+  .legal-body p{margin:0 0 10px;}
+
+  .landing-footer{max-width:600px;margin:36px auto 0;padding-top:18px;border-top:1px solid var(--rule);text-align:center;}
+  .landing-footer .links{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:10px;}
+  .landing-footer .links span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.04em;cursor:pointer;text-decoration:underline;}
+  .landing-footer .copyright{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);letter-spacing:0.03em;}
+  .login-error{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--claimed);text-align:center;margin-top:14px;display:none;}
+  .login-error.show{display:block;}
+
+  #screen-landing{display:none;min-height:100vh;background:var(--paper);}
+  #screen-landing.active{display:block;}
+  .landing-wrap{max-width:1080px;margin:0 auto;padding:42px 22px 70px;}
+  .landing-hero{text-align:center;max-width:820px;margin:auto;}
+  .landing-hero h1{font-family:'Oswald',sans-serif;font-size:clamp(32px,6vw,60px);line-height:1.05;letter-spacing:-0.02em;margin:8px 0;}
+  .landing-hero h1 span{opacity:0.55;}
+  .landing-lead{text-align:center;color:var(--ink-soft);font-size:16px;line-height:1.5;max-width:600px;margin:16px auto 0;}
+  .landing-proof{display:flex;max-width:600px;margin:34px auto 42px;border:1.5px solid var(--ink);}
+  .landing-proof div{flex:1;text-align:center;padding:16px;border-right:1px solid var(--rule);}
+  .landing-proof div:last-child{border-right:none;}
+  .landing-proof strong{display:block;font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;}
+  .landing-proof span{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);letter-spacing:0.06em;}
+  .landing-select{text-align:center;}
+  .landing-select h2{font-family:'Oswald',sans-serif;font-size:22px;margin:8px 0;}
+  .segment-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;text-align:left;margin-top:20px;}
+  .segment-card{padding:20px;border:1.5px solid var(--rule);background:var(--panel);cursor:pointer;color:var(--ink);text-align:left;font-family:inherit;}
+  .segment-card:hover{border-color:var(--ink);}
+  .segment-icon{display:inline-flex;width:52px;height:52px;align-items:center;justify-content:center;background:var(--ink);color:#fff;font-size:17px;margin-bottom:14px;}
+  .segment-card b{display:block;font-family:'Oswald',sans-serif;font-size:15px;}
+  .segment-card span{display:block;color:var(--ink-soft);margin:8px 0 12px;font-size:12.5px;line-height:1.4;}
+  .segment-card em{font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--usable);}
+  .landing-note{text-align:center;color:var(--ink-soft);margin-top:24px;font-size:12px;}
+  .landing-note strong{color:var(--ink);}
+  @media(max-width:700px){.segment-grid{grid-template-columns:1fr;}}
+
+  .programs-section{max-width:900px;margin:0 auto 42px;}
+  .programs-eyebrow{text-align:center;}
+  .programs-title{text-align:center;font-family:'Oswald',sans-serif;font-size:22px;margin:8px 0 6px;}
+  .programs-sub{text-align:center;color:var(--ink-soft);font-size:13px;margin-bottom:28px;}
+  .programs-row{display:flex;align-items:stretch;gap:0;}
+  .program-card{flex:1;border:1.5px solid var(--rule);padding:22px 18px;position:relative;background:var(--panel);}
+  .program-card.mid{border:2px solid var(--usable);background:var(--usable-bg);}
+  .program-card.end{background:var(--ink);border-color:var(--ink);}
+  .program-card.end .program-name,.program-card.end .program-price,.program-card.end .program-desc{color:#fff;}
+  .program-badge{position:absolute;top:-11px;left:18px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.05em;padding:4px 9px;background:var(--usable);color:#fff;}
+  .program-card.end .program-badge{background:#83DF52;color:var(--ink);}
+  .program-step{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);letter-spacing:0.08em;}
+  .program-card.end .program-step{color:#B8C5BF;}
+  .program-name{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;margin:6px 0 4px;}
+  .program-price{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--usable);margin-bottom:12px;}
+  .program-card.end .program-price{color:#83DF52;}
+  .program-desc{font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+  .program-arrow{display:flex;align-items:center;justify-content:center;padding:0 6px;color:var(--ink-soft);font-size:18px;flex:0 0 auto;}
+  @media(max-width:700px){.programs-row{flex-direction:column;gap:12px;}.program-arrow{transform:rotate(90deg);padding:0;}}
+</style>
+</head>
+<body>
+
+<section id="screen-landing" class="active">
+  <div class="landing-wrap">
+    <div class="landing-hero">
+      <svg class="landing-mark" width="56" height="56" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5.5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5.5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>
+      <div style="text-align:center;margin-bottom:6px;">
+        <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;letter-spacing:0.02em;color:var(--ink);text-transform:uppercase;">WHOLAMINO</div>
+        <div class="onboard-eyebrow" style="margin-bottom:0;margin-top:2px;font-weight:700;">NUTRITION &amp; METABOLIC INTELLIGENCE</div>
+      </div>
+      <h1>Know what your food<br><span>is really doing for you.</span></h1>
+      <p class="landing-lead">Protein quantity. Protein quality. Fibre. Training. Hydration. Sleep. Metabolic health. One intelligence engine — built around you.</p>
+    </div>
+    <div class="landing-proof">
+      <div><strong>9</strong><span>FREE LOGS</span></div>
+      <div><strong>1</strong><span>INTEGRATED ENGINE</span></div>
+      <div><strong>4</strong><span>WAYS TO USE IT</span></div>
+    </div>
+
+    <div class="programs-section">
+      <div class="onboard-eyebrow programs-eyebrow">YOUR JOURNEY</div>
+      <div class="programs-title">Three stages. One direction.</div>
+      <div class="programs-sub">Start free. Build the habit. Make it stick.</div>
+      <div class="programs-row">
+        <div class="program-card">
+          <div class="program-step">STAGE 1</div>
+          <div class="program-name">START</div>
+          <div class="program-price">Free — 3 days or 9 logs</div>
+          <div class="program-desc">See what you're actually eating. No card required — just sign in and log your first meal.</div>
+        </div>
+        <div class="program-arrow">→</div>
+        <div class="program-card mid">
+          <div class="program-badge">MOST POPULAR</div>
+          <div class="program-step">STAGE 2</div>
+          <div class="program-name">HABIT</div>
+          <div class="program-price">₹299 — 30 days, unlimited</div>
+          <div class="program-desc">A full month of unlimited logging — long enough for tracking to stop feeling like a chore and start feeling automatic.</div>
+          <div class="program-desc" style="margin-top:6px;font-weight:600;color:var(--usable);">+ Personalized PDF report at the end — your protein, fiber, hydration & sleep trends, with what to fix and how.</div>
+        </div>
+        <div class="program-arrow">→</div>
+        <div class="program-card end">
+          <div class="program-badge">BEST VALUE</div>
+          <div class="program-step">STAGE 3</div>
+          <div class="program-name">TRANSFORM</div>
+          <div class="program-price">₹799 — 90 days, unlimited</div>
+          <div class="program-desc">The real change window. Three full months of consistent tracking — where the numbers actually start to move.</div>
+          <div class="program-desc" style="margin-top:6px;font-weight:600;color:#83DF52;">+ Personalized PDF report at the end — your protein, fiber, hydration & sleep trends, with what to fix and how.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="landing-select">
+      <div class="onboard-eyebrow" style="text-align:center;">START HERE</div>
+      <h2>What brings you to WholAmino?</h2>
+      <p style="color:var(--ink-soft);font-size:13px;">Choose your mode. You can switch segments later.</p>
+      <div class="segment-grid">
+        <button class="segment-card" onclick="selectLandingSegment('HOME')">
+          <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 13h20"/></svg></span><b>WORKING PROFESSIONALS</b>
+          <span>Everyday nutrition for a sedentary work life, plus evidence-backed post-meal habits for metabolic health — your own meals, or anyone in your home.</span><em>Find the nutrition gap →</em>
+        </button>
+        <button class="segment-card" onclick="selectLandingSegment('GYM')">
+          <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M4 9.5h2.5v5H4z"/><path d="M17.5 9.5H20v5h-2.5z"/><path d="M9 12h6"/></svg></span><b>GYM / YOGA</b>
+          <span>Protein target + food tracking + training progress.</span><em>Train. Eat. Track. Progress. →</em>
+        </button>
+        <button class="segment-card" onclick="selectLandingSegment('SPORTS')">
+          <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-2 7H9L7 4Z"/><circle cx="12" cy="16" r="5"/><path d="M12 13v3l2 1.5"/></svg></span><b>SPORTS · ATHLETES</b>
+          <span>Training nutrition + hydration + sleep.</span><em>Fuel performance. Recover better. →</em>
+        </button>
+      </div>
+      <div style="max-width:900px;margin:22px auto 0;padding-top:18px;border-top:1px solid var(--rule);text-align:center;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.06em;">RUNNING A RESTAURANT? DIFFERENT TOOL, NOT A DAILY PROGRAM</span>
+        <button class="segment-card" onclick="selectLandingSegment('RESTAURANT')" style="max-width:420px;margin:12px auto 0;display:block;text-align:left;">
+          <span class="segment-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6a2 2 0 0 0 2 2v12"/><path d="M3 2v6"/><path d="M6 2v6"/><path d="M6 10v12"/><path d="M19 2 15 9v13"/><path d="M15 9h4"/></svg></span><b>RESTAURANT — MENU AUDIT</b>
+          <span>Free to audit any dish. A full report on your existing "healthy menu" — ₹499, not a subscription or daily program.</span><em>Make your menu stronger →</em>
+        </button>
+      </div>
+    </div>
+    <div class="landing-note"><strong>Try it before you pay.</strong> Your first 9 logs — or your first 3 days — are free.</div>
+    <div class="landing-footer">
+      <div class="links">
+        <span onclick="showLegal('about')">About</span>
+        <span onclick="showLegal('terms')">Terms</span>
+        <span onclick="showLegal('privacy')">Privacy</span>
+        <span onclick="showLegal('refund')">Refunds</span>
+        <span onclick="showLegal('contact')">Contact</span>
+      </div>
+      <div class="copyright">© 2026 WholAmino. All rights reserved.</div>
+    </div>
+  </div>
+</section>
+
+<div id="app-shell">
+  <div class="statusbar"><span id="clock">9:41</span><span>●●● 5G 87%</span></div>
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="app-header">
+      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>WHOL<span>AMINO</span></div>
+    </div>
+    <div class="segment-switcher" id="segmentSwitcherHome">
+      <button class="segment-btn" id="segBtnHome-SPORTS" onclick="setSegment('SPORTS')">SPORTS</button>
+      <button class="segment-btn" id="segBtnHome-GYM" onclick="setSegment('GYM')">GYM</button>
+      <button class="segment-btn" id="segBtnHome-HOME" onclick="setSegment('HOME')">HOME</button>
+      <button class="segment-btn" id="segBtnHome-RESTAURANT" onclick="setSegment('RESTAURANT')">RESTAURANT</button>
+    </div>
+    <div id="expiryWarningBanner" style="display:none;"></div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="lbl">PROTEIN</div>
+        <div class="val"><span id="proteinVal">0</span>g</div>
+        <div class="of">of <span id="proteinTarget">130</span>g</div>
+        <div class="pillar-bar"><div class="pillar-fill" id="proteinBar" style="width:0%;background:var(--claimed);"></div></div>
+      </div>
+      <div class="pillar">
+        <div class="lbl">FIBER</div>
+        <div class="val"><span id="fiberVal">0</span>g</div>
+        <div class="of">of <span id="fiberTarget">51</span>g</div>
+        <div class="pillar-bar"><div class="pillar-fill" id="fiberBar" style="width:0%;background:var(--warn);"></div></div>
+        <div class="pillar-add"><button onclick="addFiber(6)">+6g SALAD</button></div>
+      </div>
+      <div class="pillar" id="pillarFluid">
+        <div class="lbl">FLUID</div>
+        <div class="val"><span id="fluidVal">0.0</span>L</div>
+        <div class="of">of <span id="fluidTarget">2.4</span>L</div>
+        <div class="pillar-bar"><div class="pillar-fill" id="fluidBar" style="width:0%;"></div></div>
+        <div class="pillar-add" style="display:flex;gap:4px;">
+          <button onclick="addFluid(0.3)" style="flex:1;">+300ML</button>
+          <input type="number" id="fluidCustomInput" placeholder="ml" style="width:44px;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;">
+          <button onclick="addFluidCustom()" style="flex:0 0 auto;padding:3px 6px;">+</button>
+        </div>
+      </div>
+      <div class="pillar" id="pillarSleep">
+        <div class="lbl">SLEEP (last night)</div>
+        <div class="val"><span id="sleepVal">0.0</span>h</div>
+        <div class="of">of <span id="sleepTarget">8</span>h</div>
+        <div class="pillar-bar"><div class="pillar-fill" id="sleepBar" style="width:0%;background:#5B6FA8;"></div></div>
+        <div class="pillar-add"><input type="number" step="0.5" id="sleepInput" placeholder="hrs" style="width:100%;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;" oninput="setSleep(this.value)"></div>
+      </div>
+    </div>
+    <div id="homeSimpleNote" class="conf-note" style="display:none;margin-bottom:14px;">Tracking protein and fiber from what you cook. Fluid and sleep tracking are built for athletes and gym training — see Profile if that's becoming more relevant for you.</div>
+    <div id="trainingRow" style="background:var(--panel);border:1px solid var(--rule);padding:12px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;">TRAINING TODAY</span>
+      <button id="trainingToggleBtn" onclick="toggleTrainingCompleted()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:8px 14px;border:1.5px solid var(--ink);background:var(--panel);cursor:pointer;">NOT LOGGED</button>
+    </div>
+    <div id="presleepTip" class="fix-card" style="display:none;margin-bottom:14px;"></div>
+
+    <div class="log-box" style="padding:10px;">
+      <button class="log-send" style="margin-top:0;" onclick="goTab('history')">LOG A MEAL — BREAKFAST, LUNCH OR DINNER →</button>
+    </div>
+    <button class="log-send" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);margin-bottom:14px;" onclick="goTab('progress')">VIEW 30-DAY PROGRESS →</button>
+    <div class="section-lbl">TODAY, AT A GLANCE</div>
+    <div id="todaySummary"></div>
+  </div>
+
+  <!-- PROGRESS (last 30 days) -->
+  <div class="screen" id="screen-progress">
+    <div class="back-row" onclick="goTab('home')"><span class="back-arrow">‹</span><div class="result-title">Last 30 Days</div></div>
+    <div id="progressBody"></div>
+  </div>
+  <!-- LOG (browse full dish list) -->
+  <div class="screen" id="screen-log">
+    <div class="app-header"><div class="app-logo" style="font-size:16px;">Browse dishes</div></div>
+    <div class="log-box">
+      <input type="text" id="searchInput" placeholder="Search dishes..." oninput="renderDishBrowser()">
+    </div>
+    <div id="dishBrowser"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="back-row" onclick="goTab('home')"><span class="back-arrow">‹</span><div class="result-title" id="resultTitle">Result</div></div>
+    <div id="resultBody"></div>
+  </div>
+
+  <!-- HISTORY (renders as "Meals" tab — real logging happens here, per slot) -->
+  <div class="screen" id="screen-history">
+    <div class="app-header"><div class="app-logo" style="font-size:16px;">Meals</div></div>
+    <div class="week-stats">
+      <div class="week-stat"><b style="color:var(--usable);" id="countComplete">0</b><span>COMPLETE</span></div>
+      <div class="week-stat"><b style="color:var(--warn);" id="countStrong">0</b><span>STRONG</span></div>
+      <div class="week-stat"><b style="color:var(--claimed);" id="countGap">0</b><span>GAP</span></div>
+    </div>
+    <div class="conf-note" style="margin-bottom:14px;">Spreading protein evenly across meals supports 24h muscle repair better than one big meal (Mamerow et al., 2014) — most reliable for general/athletic adults; less settled for older adults specifically.</div>
+
+    <div id="nextMealBanner"></div>
+    <div id="mealSlotSections"></div>
+
+    
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="screen-profile">
+    <div class="app-header"><div class="app-logo" style="font-size:16px;">Profile</div></div>
+    <div class="profile-card">
+      <div class="avatar" id="avatarLetter">A</div>
+      <div style="flex:1;">
+        <div class="profile-field"><label>NAME</label><input type="text" id="nameInput" value="Ananya" oninput="onProfileChange()"></div>
+      </div>
+    </div>
+    <div class="profile-card" style="padding:12px 16px;">
+      <div class="profile-field" style="flex:1;"><label>BODY WEIGHT (KG)</label><input type="number" id="weightInput" value="65" oninput="onProfileChange()"></div>
+    </div>
+    <div class="profile-card" style="padding:12px 16px;gap:20px;">
+      <div class="profile-field" style="flex:1;"><label>AGE</label><input type="number" id="ageInput" value="22" oninput="onProfileChange()"></div>
+      <div class="profile-field" style="flex:1;">
+        <label>SEX</label>
+        <div style="display:flex;gap:6px;margin-top:2px;">
+          <div class="chip" id="sexF" style="padding:5px 10px;" onclick="setSex('F')">F</div>
+          <div class="chip" id="sexM" style="padding:5px 10px;" onclick="setSex('M')">M</div>
+        </div>
+      </div>
+    </div>
+    <div id="lifeStageSection" style="display:none;">
+      <div class="section-lbl">LIFE STAGE</div>
+      <div class="chip-row">
+        <div class="chip" id="lifeNone" onclick="setLifeStage('none')">NONE</div>
+        <div class="chip" id="lifePregnant" onclick="setLifeStage('pregnant')">PREGNANT</div>
+        <div class="chip" id="lifeLactating" onclick="setLifeStage('lactating')">LACTATING</div>
+      </div>
+      <div class="conf-note" style="margin-bottom:14px;">General estimate only — pregnancy and lactation nutrition needs vary a lot. Please check with your doctor or a dietitian for personal guidance.</div>
+    </div>
+
+    <div class="section-lbl">SEGMENT</div>
+    <div class="chip-row" id="segmentChips"></div>
+
+    <div class="section-lbl" id="phaseSectionLbl">TRAINING PHASE</div>
+    <div class="phase-toggle" id="phaseToggle">
+      <div class="phase-opt" id="phaseGeneral" onclick="setPhase('general')">GENERAL</div>
+      <div class="phase-opt active" id="phaseCompetition" onclick="setPhase('competition')">COMPETITION</div>
+    </div>
+    <div class="phase-toggle" id="goalToggle" style="display:none;">
+      <div class="phase-opt" id="goalGeneral" onclick="setGoal('general')">GENERAL FITNESS</div>
+      <div class="phase-opt" id="goalMuscle" onclick="setGoal('muscle')">MUSCLE GAIN</div>
+      <div class="phase-opt" id="goalFatloss" onclick="setGoal('fatloss')">FAT LOSS</div>
+    </div>
+    <div class="section-lbl" id="trainingStyleSectionLbl" style="display:none;">TRAINING STYLE</div>
+    <div class="chip-row" id="trainingStyleChips" style="display:none;margin-bottom:14px;">
+      <div class="chip" id="styleWeights" onclick="setTrainingStyle('weights')">WEIGHT TRAINING</div>
+      <div class="chip" id="stylePilates" onclick="setTrainingStyle('pilates')">PILATES</div>
+      <div class="chip" id="styleYoga" onclick="setTrainingStyle('yoga')">YOGA</div>
+      <div class="chip" id="styleCrossfit" onclick="setTrainingStyle('crossfit')">CROSSFIT / FUNCTIONAL</div>
+      <div class="chip" id="styleCardio" onclick="setTrainingStyle('cardio')">CARDIO-FOCUSED</div>
+      <div class="chip" id="styleMixed" onclick="setTrainingStyle('mixed')">MIXED</div>
+    </div>
+    <div class="conf-note" id="homeSegmentNote" style="display:none;margin-bottom:14px;">Using general adult guidelines (ICMR-NIN) — not training-calibrated.</div>
+
+    <div class="section-lbl">DAILY TARGETS — <span id="targetBasisLabel">Sports — Competition block</span></div>
+    <div class="target-card">
+      <div class="target-row"><span class="target-name">Protein (ISSN)</span><span class="target-val" id="targetProteinDisplay">130g</span></div>
+      <div class="target-row"><span class="target-name">Fiber (ICMR-NIN, scaled)</span><span class="target-val" id="targetFiberDisplay">51g</span></div>
+      <div class="target-row"><span class="target-name">Fluid (ACSM baseline)</span><span class="target-val" id="targetFluidDisplay">2.4L</span></div>
+    </div>
+
+    <div class="section-lbl">SETTINGS</div>
+    <div class="settings-row"><span>Confidence ladder</span><span class="chev">›</span></div>
+    <div class="settings-row"><span>Coach: Yadav Pro Badminton Academy</span><span class="chev">›</span></div>
+    <div class="settings-row" onclick="showLegal(&apos;about&apos;)" style="cursor:pointer;"><span>About WholAmino</span><span class="chev">›</span></div>
+    <div class="section-lbl">YOUR PROGRAM</div>
+    <div id="premiumStatusCard" class="target-card">
+      <div class="target-row"><span class="target-name" id="premiumStatusLabel">START</span><span class="target-val" id="premiumStatusBadge"></span></div>
+    </div>
+    <div id="readyReportsCard" style="display:none;margin-top:10px;"></div>
+    <div id="programCards" style="margin-bottom:14px;">
+      <div class="upgrade-card habit" onclick="startProgramPurchase('habit')">
+        <div class="upgrade-badge">MOST POPULAR</div>
+        <div>
+          <div class="upgrade-name">HABIT</div>
+          <div class="upgrade-price">₹299</div>
+          <div class="upgrade-desc">30 DAYS · UNLIMITED LOGGING — build the routine</div>
+          <div class="upgrade-desc" style="color:var(--usable);font-weight:700;margin-top:3px;">+ PDF report with insights at the end</div>
+        </div>
+        <div class="upgrade-arrow">→</div>
+      </div>
+      <div class="upgrade-card transform" onclick="startProgramPurchase('transform')">
+        <div class="upgrade-badge">BEST VALUE</div>
+        <div>
+          <div class="upgrade-name">TRANSFORM</div>
+          <div class="upgrade-price">₹799</div>
+          <div class="upgrade-desc">90 DAYS · UNLIMITED LOGGING — the real change window</div>
+          <div class="upgrade-desc" style="color:#83DF52;font-weight:700;margin-top:3px;">+ PDF report with insights at the end</div>
+        </div>
+        <div class="upgrade-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="settings-row" onclick="resetSession()" style="cursor:pointer;"><span>Reset session data</span><span class="chev">›</span></div>
+    <div id="switchToGymRow" style="display:none;background:var(--panel);border:1.5px solid var(--usable);padding:12px;margin-bottom:10px;cursor:pointer;" onclick="switchToGym()">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--usable);">STARTED TRAINING REGULARLY?</span>
+      <div style="font-size:12.5px;margin-top:4px;">Switch to Gym / Yoga mode for training-aware targets, recovery tracking, and progress charts →</div>
+    </div>
+    <div class="settings-row" onclick="resetProfileSegment()" style="cursor:pointer;"><span>Reset my profile (switch segment)</span><span class="chev">›</span></div>
+    <div class="settings-row" id="signOutRow" onclick="doSignOut()" style="cursor:pointer;display:none;"><span style="color:var(--claimed);">Sign out</span><span class="chev">›</span></div>
+  </div>
+
+  <!-- RESTAURANT: MENU -->
+  <div class="screen" id="screen-menu">
+    <div class="app-header">
+      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>WHOL<span>AMINO</span></div>
+    </div>
+    <div class="segment-switcher" id="segmentSwitcherMenu">
+      <button class="segment-btn" id="segBtnMenu-SPORTS" onclick="setSegment('SPORTS')">SPORTS</button>
+      <button class="segment-btn" id="segBtnMenu-GYM" onclick="setSegment('GYM')">GYM</button>
+      <button class="segment-btn" id="segBtnMenu-HOME" onclick="setSegment('HOME')">HOME</button>
+      <button class="segment-btn" id="segBtnMenu-RESTAURANT" onclick="setSegment('RESTAURANT')">RESTAURANT</button>
+    </div>
+    <div class="week-stats">
+      <div class="week-stat"><b style="color:var(--usable);" id="menuCountComplete">0</b><span>COMPLETE</span></div>
+      <div class="week-stat"><b style="color:var(--warn);" id="menuCountStrong">0</b><span>STRONG</span></div>
+      <div class="week-stat"><b style="color:var(--claimed);" id="menuCountGap">0</b><span>GAP</span></div>
+    </div>
+    <div class="log-box" style="padding:10px;">
+      <button class="log-send" style="margin-top:0;" onclick="goTab('audit')">+ AUDIT A DISH →</button>
+    </div>
+    <div class="section-lbl">MENU (<span id="menuCount">0</span> dishes)</div>
+    <div id="menuList"></div>
+  </div>
+
+  <!-- RESTAURANT: AUDIT -->
+  <div class="screen" id="screen-audit">
+    <div class="back-row" onclick="goTab('menu')"><span class="back-arrow">‹</span><div class="result-title">Audit a dish</div></div>
+    <div class="log-box">
+      <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);">DISH NAME</label>
+      <input type="text" id="auditDishName" placeholder="e.g. Paneer Power Bowl" style="margin-bottom:8px;">
+      <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);">DECLARED PROTEIN (g) — optional</label>
+      <input type="number" id="auditDeclared" placeholder="e.g. 24">
+    </div>
+    <div class="section-lbl">WORKING RECIPE — one ingredient per line, e.g. "paneer 120"</div>
+    <div class="log-box">
+      <textarea id="auditRecipe" rows="5" style="width:100%;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:12px;background:transparent;resize:vertical;" placeholder="paneer 120
+rice 150
+yogurt 40"></textarea>
+    </div>
+    <button class="log-send" onclick="runAudit()">RUN AUDIT →</button>
+    <div class="section-lbl">OR START FROM A KNOWN DISH</div>
+    <div class="chip-row" id="auditPresets"></div>
+  </div>
+
+  <!-- RESTAURANT: REPORTS -->
+  <div class="screen" id="screen-reports">
+    <div class="app-header"><div class="app-logo" style="font-size:16px;">Reports</div></div>
+    <div class="section-lbl">MENU SUMMARY</div>
+    <div id="reportsSummary" class="fix-card"></div>
+    <button class="log-send" onclick="copySummary()">COPY SUMMARY TEXT</button>
+    <div id="restaurantPaidCard" class="target-card" style="margin-top:14px;">
+      <div class="target-row"><span class="target-name" id="restaurantPaidLabel">Full formatted PDF report</span><span class="target-val" id="restaurantPaidBadge"></span></div>
+    </div>
+    <button class="log-send" id="buyReportBtn" onclick="startRestaurantPurchase()" style="margin-bottom:14px;">AUDIT YOUR HEALTHY MENU — ₹499 →</button>
+    <div class="section-lbl">ALL AUDITED DISHES</div>
+    <div id="reportsList"></div>
+  </div>
+
+  <!-- RESTAURANT: PROFILE -->
+  <div class="screen" id="screen-restaurant-profile">
+    <div class="app-header"><div class="app-logo" style="font-size:16px;">Restaurant Profile</div></div>
+    <div class="profile-card" style="display:block;">
+      <div class="profile-field"><label>RESTAURANT NAME</label><input type="text" id="restNameInput" value="My Restaurant" oninput="onRestaurantProfileChange()"></div>
+    </div>
+    <div class="profile-card" style="display:block;">
+      <div class="profile-field"><label>CUISINE TYPE</label><input type="text" id="restCuisineInput" value="North Indian" oninput="onRestaurantProfileChange()"></div>
+    </div>
+    <div class="profile-card" style="display:block;">
+      <div class="profile-field"><label>LOCATION</label><input type="text" id="restLocationInput" placeholder="e.g. JP Nagar, Bengaluru" oninput="onRestaurantProfileChange()"></div>
+    </div>
+    <div class="profile-card" style="display:block;">
+      <div class="profile-field"><label>CONTACT</label><input type="text" id="restContactInput" placeholder="phone or email" oninput="onRestaurantProfileChange()"></div>
+    </div>
+
+    <div class="section-lbl">SEGMENT</div>
+    <div class="chip-row" id="segmentChipsR"></div>
+
+    <div class="section-lbl">SETTINGS</div>
+    <div class="settings-row"><span>Confidence ladder</span><span class="chev">›</span></div>
+    <div class="settings-row" onclick="showLegal(&apos;about&apos;)" style="cursor:pointer;"><span>About WholAmino</span><span class="chev">›</span></div>
+    <div class="settings-row" onclick="resetMenu()" style="cursor:pointer;"><span>Clear menu data</span><span class="chev">›</span></div>
+    <div class="settings-row" id="signOutRowR" onclick="doSignOut()" style="cursor:pointer;display:none;"><span style="color:var(--claimed);">Sign out</span><span class="chev">›</span></div>
+  </div>
+
+  <div class="tabbar" id="tabbarPersonal">
+    <button class="tab active" id="tabBtn-home" onclick="goTab('home')"><div class="tab-icon">◆</div><span class="tab-lbl">HOME</span></button>
+    <button class="tab" id="tabBtn-log" onclick="goTab('log')"><div class="tab-icon">+</div><span class="tab-lbl">LOG</span></button>
+    <button class="tab" id="tabBtn-history" onclick="goTab('history')"><div class="tab-icon">≡</div><span class="tab-lbl">MEALS</span></button>
+    <button class="tab" id="tabBtn-profile" onclick="goTab('profile')"><div class="tab-icon">●</div><span class="tab-lbl">PROFILE</span></button>
+  </div>
+  <div class="tabbar" id="tabbarRestaurant" style="display:none;">
+    <button class="tab" id="tabBtn-menu" onclick="goTab('menu')"><div class="tab-icon">◆</div><span class="tab-lbl">MENU</span></button>
+    <button class="tab" id="tabBtn-audit" onclick="goTab('audit')"><div class="tab-icon">+</div><span class="tab-lbl">AUDIT</span></button>
+    <button class="tab" id="tabBtn-reports" onclick="goTab('reports')"><div class="tab-icon">≡</div><span class="tab-lbl">REPORTS</span></button>
+    <button class="tab" id="tabBtn-rprofile" onclick="goTab('rprofile')"><div class="tab-icon">●</div><span class="tab-lbl">PROFILE</span></button>
+  </div>
+
+  <div class="onboard-overlay" id="onboardOverlay">
+    <div class="onboard-card">
+      <div class="onboard-eyebrow" id="onboardEyebrow">FIRST TIME IN SPORTS MODE</div>
+      <div class="onboard-title" id="onboardTitle">Let's set up your training profile</div>
+      <div class="onboard-sub" id="onboardSub">This sets your daily protein, fiber, and fluid targets. You can change it anytime in Profile.</div>
+      <div class="onboard-row">
+        <div class="onboard-field" style="flex:1;"><label>NAME</label><input type="text" id="onboardName" value="Ananya"></div>
+      </div>
+      <div class="onboard-row">
+        <div class="onboard-field"><label>WEIGHT (KG)</label><input type="number" id="onboardWeight" value="65"></div>
+        <div class="onboard-field"><label>AGE</label><input type="number" id="onboardAge" value="22"></div>
+      </div>
+      <div class="onboard-row" id="onboardSexRow">
+        <div class="onboard-field" style="display:flex;gap:8px;align-items:flex-end;">
+          <button class="phase-opt" id="onboardSexF" style="flex:1;padding:9px;border:1.5px solid var(--ink);cursor:pointer;background:var(--panel);" onclick="onboardSetSex('F')">F</button>
+          <button class="phase-opt" id="onboardSexM" style="flex:1;padding:9px;border:1.5px solid var(--ink);cursor:pointer;background:var(--panel);" onclick="onboardSetSex('M')">M</button>
+        </div>
+      </div>
+      <div class="onboard-options" id="onboardOptions"></div>
+      <button class="onboard-btn" onclick="completeOnboarding()">START TRACKING →</button>
+    </div>
+  </div>
+
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-logo">WHOL<span>AMINO</span></div>
+    <div class="login-sub">Sign in to save your data across sessions — protein, meals, and menus, not lost when you close the app.</div>
+    <div class="login-field">
+      <label>EMAIL</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com">
+    </div>
+    <div class="login-field" id="reviewerPasswordField" style="display:none;">
+      <label>PASSWORD</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button class="onboard-btn" onclick="sendMagicLink()" id="loginBtn">SEND SIGN-IN LINK →</button>
+    <button class="onboard-btn" onclick="reviewerSignIn()" id="reviewerBtn" style="display:none;margin-top:8px;">SIGN IN →</button>
+    <div class="login-status" id="loginStatus">Check your email for a sign-in link.</div>
+    <div class="login-error" id="loginError"></div>
+    <div style="text-align:center;margin-top:14px;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="toggleReviewerLogin()" id="reviewerToggle">Sign in with a password instead</span>
+    </div>
+    <div id="skipAccountRestaurant" style="display:none;margin-top:18px;">
+      <button class="log-send" onclick="continueWithoutAccount()" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);">TRY A FREE DISH AUDIT — NO SIGN-UP →</button>
+      <div style="text-align:center;margin-top:8px;font-size:9.5px;color:var(--ink-soft);">You'll only need to sign in to save your menu or buy the full report.</div>
+    </div>
+    <div id="skipAccountDefault" style="text-align:center;margin-top:20px;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="continueWithoutAccount()">Continue without an account (data won't be saved)</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// SUPABASE CONFIG — fill these in once you create a Supabase project:
+// Project Settings → API → Project URL, and the "anon public" key.
+// Until these are filled in, the app runs exactly as before — local-only,
+// no login prompt, nothing breaks.
+// ============================================================================
+const SUPABASE_URL = "https://xtkrltroefoafbtsfrtc.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_XBhYZlGr0Zh13VjIbXP0fA_njeH-P0y";
+const SUPABASE_CONFIGURED = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
+
+let sb = null;
+let currentUser = null;
+if(SUPABASE_CONFIGURED && window.supabase){
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+function toggleReviewerLogin(){
+  const showingPassword = document.getElementById('reviewerPasswordField').style.display === 'block';
+  document.getElementById('reviewerPasswordField').style.display = showingPassword ? 'none' : 'block';
+  document.getElementById('loginBtn').style.display = showingPassword ? 'block' : 'none';
+  document.getElementById('reviewerBtn').style.display = showingPassword ? 'none' : 'block';
+  document.getElementById('reviewerToggle').textContent = showingPassword ? 'Sign in with a password instead' : 'Use email link instead';
+  document.getElementById('loginStatus').classList.remove('show');
+  document.getElementById('loginError').classList.remove('show');
+}
+
+async function reviewerSignIn(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.classList.remove('show');
+  if(!email || !password){ errorEl.textContent = "Enter both email and password."; errorEl.classList.add('show'); return; }
+  if(!sb){ errorEl.textContent = "Backend not configured yet."; errorEl.classList.add('show'); return; }
+  const btn = document.getElementById('reviewerBtn');
+  btn.textContent = "SIGNING IN...";
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  btn.textContent = "SIGN IN →";
+  if(error){ errorEl.textContent = error.message; errorEl.classList.add('show'); return; }
+  // On success, Supabase's onAuthStateChange (already wired elsewhere in this file)
+  // picks up the new session automatically, same as the magic-link path.
+}
+
+async function sendMagicLink(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const statusEl = document.getElementById('loginStatus');
+  const errorEl = document.getElementById('loginError');
+  statusEl.classList.remove('show'); errorEl.classList.remove('show');
+  if(!email){ errorEl.textContent = "Enter an email first."; errorEl.classList.add('show'); return; }
+  if(!sb){ errorEl.textContent = "Backend not configured yet — see supabase-schema.sql setup instructions."; errorEl.classList.add('show'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = "SENDING...";
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + '?segment=' + state.segment } });
+  btn.textContent = "SEND SIGN-IN LINK →";
+  if(error){ errorEl.textContent = error.message; errorEl.classList.add('show'); return; }
+  statusEl.classList.add('show');
+}
+
+// ---- Payments ----
+let currentSubscriptions = []; // active subscription rows: habit/transform/restaurant_report
+
+function edgeFunctionUrl(name){
+  // Confirmed real format from an actual deployed function's dashboard page:
+  // https://<project-ref>.supabase.co/functions/v1/<name>
+  return SUPABASE_URL + "/functions/v1/" + name;
+}
+
+async function checkSubscriptionStatus(){
+  if(!sb || !currentUser) { currentSubscriptions = []; return; }
+  const { data } = await sb.from('subscriptions')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+  currentSubscriptions = data || [];
+}
+
+// Returns the currently active program: 'start' (free) | 'habit' | 'transform'.
+// A habit/transform purchase only counts while its current_period_end is
+// still in the future — once it expires, this correctly falls back to 'start'.
+function getCurrentTier(){
+  const active = currentSubscriptions.find(s =>
+    (s.plan_type === 'habit' || s.plan_type === 'transform') &&
+    s.current_period_end && new Date(s.current_period_end) > new Date()
+  );
+  return active ? active.plan_type : 'start';
+}
+
+function hasRestaurantReport(){
+  return currentSubscriptions.some(s => s.plan_type === 'restaurant_report');
+}
+
+// Returns the active habit/transform row if it expires within the next 2 days
+// (but hasn't expired yet) — null otherwise. Same current_period_end field
+// everything else already relies on; this just adds a "not yet, but soon" window.
+function getExpiringWarning(){
+  const now = new Date();
+  const warnWindowMs = 2 * 24 * 60 * 60 * 1000; // 2 days
+  return currentSubscriptions.find(s => {
+    if(s.plan_type !== 'habit' && s.plan_type !== 'transform') return false;
+    if(!s.current_period_end) return false;
+    const end = new Date(s.current_period_end);
+    const msLeft = end - now;
+    return msLeft > 0 && msLeft <= warnWindowMs;
+  }) || null;
+}
+
+function renderExpiryWarning(){
+  const el = document.getElementById('expiryWarningBanner');
+  if(!el) return; // only exists on the Home screen
+  const sub = getExpiringWarning();
+  if(!sub){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  const end = new Date(sub.current_period_end);
+  const daysLeft = Math.max(1, Math.ceil((end - new Date()) / (1000*60*60*24)));
+  const label = PROGRAM_LABELS[sub.plan_type].name;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:var(--warn-bg);border:1.5px solid var(--warn);padding:12px 14px;margin-bottom:12px;cursor:pointer;" onclick="goTab('profile')">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--warn);letter-spacing:0.04em;">PLAN ENDING SOON</div>
+      <div style="font-size:12.5px;margin-top:4px;color:var(--ink);">Your ${label} plan ends in ${daysLeft} day${daysLeft===1?'':'s'} (${end.toLocaleDateString()}). Renew now to keep unlimited logging without a gap →</div>
+    </div>
+  `;
+}
+
+// A habit/transform plan is "completed" once its period has genuinely ended —
+// same date check getCurrentTier() already uses, just looking the other way.
+function completedProgramPeriods(){
+  return currentSubscriptions.filter(s =>
+    (s.plan_type === 'habit' || s.plan_type === 'transform') &&
+    s.current_period_end && new Date(s.current_period_end) <= new Date()
+  );
+}
+
+async function fetchPeriodMetrics(sub){
+  const periodStart = new Date(sub.created_at);
+  const periodEnd = new Date(sub.current_period_end);
+  const { data, error } = await sb.from('daily_metrics')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .gte('date', periodStart.toISOString().slice(0,10))
+    .lte('date', periodEnd.toISOString().slice(0,10))
+    .order('date');
+  if(error){ console.error('Report metrics fetch failed:', error); return null; }
+  const rows = data || [];
+  const totalDays = PROGRAM_LABELS[sub.plan_type].days;
+  const loggedDays = rows.length;
+  const avg = (key) => loggedDays ? rows.reduce((s,r)=>s+(r[key]||0),0) / loggedDays : 0;
+  return {
+    periodStart, periodEnd, totalDays, loggedDays,
+    adherencePct: totalDays ? Math.round((loggedDays/totalDays)*100) : 0,
+    avgProtein: avg('protein_g'), avgProteinTarget: avg('protein_target'),
+    avgFiber: avg('fiber_g'), avgFiberTarget: avg('fiber_target'),
+    avgFluid: avg('fluid_l'), avgFluidTarget: avg('fluid_target'),
+    avgSleep: avg('sleep_h'), avgSleepTarget: avg('sleep_target'),
+  };
+}
+
+const INSIGHT_CONTENT = {
+  protein: {
+    label: 'Protein',
+    impact: 'Consistently falling short on protein slows muscle repair and recovery, and makes it harder to hold onto lean mass — especially on training days.',
+    recommendation: 'Add a protein-dense food to your next meal (eggs, paneer, dal, chicken, curd, or a protein shake) rather than trying to fix it in one sitting — spreading it across meals works better than one large dose.',
+  },
+  fiber: {
+    label: 'Fiber',
+    impact: 'Low fiber intake is commonly linked to sluggish digestion and bigger swings in energy and hunger through the day.',
+    recommendation: 'Add one extra fiber source per meal — whole grains, vegetables, or legumes (dal, rajma, chickpeas) are easy wins that add up fast.',
+  },
+  fluid: {
+    label: 'Hydration',
+    impact: 'Under-hydration can noticeably affect training performance, focus, and energy levels — often before you even feel thirsty.',
+    recommendation: 'Keep a bottle within reach and refill it at set points in the day (after waking, before/after training, with each meal) rather than relying on remembering to drink.',
+  },
+  sleep: {
+    label: 'Sleep',
+    impact: 'Insufficient sleep impairs recovery and can make it harder to regulate appetite and cravings the next day.',
+    recommendation: 'Aim for a consistent bedtime rather than a longer one first — even 30-60 extra minutes, at a fixed time, tends to help more than sleeping in occasionally.',
+  },
+};
+
+function computeGaps(m){
+  const metrics = [
+    { key: 'protein', avg: m.avgProtein, target: m.avgProteinTarget },
+    { key: 'fiber', avg: m.avgFiber, target: m.avgFiberTarget },
+    { key: 'fluid', avg: m.avgFluid, target: m.avgFluidTarget },
+    { key: 'sleep', avg: m.avgSleep, target: m.avgSleepTarget },
+  ];
+  return metrics
+    .filter(x => x.target > 0)
+    .map(x => ({ ...x, pct: Math.round((x.avg/x.target)*100) }))
+    .filter(x => x.pct < 90)
+    .sort((a,b) => a.pct - b.pct);
+}
+
+function generateReportPDF(sub, m){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const pageWidth = 170; // usable width in mm, given 20mm margins on A4
+  const label = PROGRAM_LABELS[sub.plan_type].name;
+  let y = 22;
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text('WHOLAMINO', 20, y);
+  doc.setFontSize(11); doc.setTextColor(120); doc.text('Nutrition & Metabolic Intelligence', 20, y+6);
+  doc.setTextColor(0); y += 20;
+  doc.setFontSize(15); doc.text(`${label} — Program Summary`, 20, y); y += 8;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  doc.text(`${state.name || 'User'}`, 20, y); y += 6;
+  doc.text(`${m.periodStart.toLocaleDateString()} — ${m.periodEnd.toLocaleDateString()} (${m.totalDays} days)`, 20, y); y += 12;
+
+  const row = (title, avgVal, target, unit) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text(title, 20, y); y += 6;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    const pct = target ? Math.round((avgVal/target)*100) : null;
+    doc.text(`Average: ${avgVal.toFixed(1)}${unit}/day` + (target ? `  ·  Target: ${target.toFixed(1)}${unit}/day  ·  ${pct}% of target` : ''), 24, y);
+    y += 10;
+  };
+  row('Protein', m.avgProtein, m.avgProteinTarget, 'g');
+  row('Fiber', m.avgFiber, m.avgFiberTarget, 'g');
+  row('Hydration', m.avgFluid, m.avgFluidTarget, 'L');
+  row('Sleep', m.avgSleep, m.avgSleepTarget, 'h');
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Adherence', 20, y); y += 6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  doc.text(`Logged ${m.loggedDays} of ${m.totalDays} days — ${m.adherencePct}%`, 24, y); y += 14;
+
+  // ---- Insights & Recommendations ----
+  const gaps = computeGaps(m);
+  const ensureRoom = (needed) => { if(y + needed > 270){ doc.addPage(); y = 22; } };
+
+  if(gaps.length){
+    ensureRoom(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Key Focus', 20, y); y += 7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    const top = gaps[0];
+    const focusLine = doc.splitTextToSize(
+      `${INSIGHT_CONTENT[top.key].label} is your biggest gap this period, at ${top.pct}% of target. Closing this one gap first will likely move the needle more than trying to fix everything at once.`,
+      pageWidth
+    );
+    doc.text(focusLine, 20, y); y += focusLine.length * 5 + 10;
+
+    ensureRoom(15);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Insights & What To Do Next', 20, y); y += 9;
+
+    gaps.forEach(g => {
+      const c = INSIGHT_CONTENT[g.key];
+      ensureRoom(35);
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(`${c.label} — ${g.pct}% of target`, 20, y); y += 6;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.setTextColor(90);
+      const impactLines = doc.splitTextToSize(c.impact, pageWidth - 4);
+      doc.text(impactLines, 24, y); y += impactLines.length * 4.8 + 3;
+      doc.setTextColor(0);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text('Try this:', 24, y); y += 5;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const recLines = doc.splitTextToSize(c.recommendation, pageWidth - 4);
+      doc.text(recLines, 24, y); y += recLines.length * 4.8 + 8;
+    });
+  } else {
+    ensureRoom(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Key Focus', 20, y); y += 7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    doc.text('You hit at least 90% of target on every tracked metric this period — genuinely solid consistency. Keep it up.', 20, y); y += 14;
+  }
+
+  doc.setFontSize(8.5); doc.setTextColor(140);
+  doc.text('Generated by WholAmino. Informational only — not a substitute for medical or professional dietary advice.', 20, 285);
+  doc.save(`WholAmino-${sub.plan_type}-report-${m.periodEnd.toISOString().slice(0,10)}.pdf`);
+}
+
+async function downloadPeriodReport(subId, btnEl){
+  const sub = currentSubscriptions.find(s => s.id === subId);
+  if(!sub) return;
+  const originalText = btnEl.textContent;
+  btnEl.textContent = 'PREPARING...';
+  const metrics = await fetchPeriodMetrics(sub);
+  btnEl.textContent = originalText;
+  if(!metrics){ alert('Could not load your data for this period — try again in a moment.'); return; }
+  generateReportPDF(sub, metrics);
+}
+
+function renderReadyReports(){
+  const el = document.getElementById('readyReportsCard');
+  const periods = completedProgramPeriods();
+  if(!periods.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = periods.map(sub => `
+    <div class="upgrade-card" style="border-color:var(--usable);cursor:default;" onclick="event.stopPropagation()">
+      <div class="upgrade-badge" style="position:static;display:inline-block;margin-bottom:6px;">REPORT READY</div>
+      <div style="width:100%;">
+        <div class="upgrade-name">${PROGRAM_LABELS[sub.plan_type].name} SUMMARY</div>
+        <div class="upgrade-desc" style="margin-bottom:10px;">${new Date(sub.created_at).toLocaleDateString()} — ${new Date(sub.current_period_end).toLocaleDateString()}</div>
+        <button class="log-send" onclick="downloadPeriodReport('${sub.id}', this)" style="width:100%;">DOWNLOAD PDF REPORT →</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+const PROGRAM_LABELS = {
+  habit: { name: 'HABIT', days: 30 },
+  transform: { name: 'TRANSFORM', days: 90 },
+};
+
+async function startProgramPurchase(tier){
+  if(!sb || !currentUser){ alert("Sign in first — see the login screen."); return; }
+  const label = PROGRAM_LABELS[tier];
+  try {
+    const session = await sb.auth.getSession();
+    const res = await fetch(edgeFunctionUrl('create-payment'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.data.session.access_token },
+      body: JSON.stringify({ planType: tier }),
+    });
+    const data = await res.json();
+    if(!res.ok || data.error){ alert("Couldn't start checkout: " + (data.error || 'unknown error')); return; }
+
+    const rzp = new Razorpay({
+      key: data.keyId,
+      order_id: data.orderId,
+      amount: data.amount,
+      currency: "INR",
+      name: `WholAmino ${label.name}`,
+      description: `${label.days}-day program`,
+      theme: { color: "#141414" },
+      handler: function(response){
+        alert("Payment submitted — it'll activate within a minute once confirmed. Reopen the app if it doesn't update automatically.");
+        setTimeout(async () => { await checkSubscriptionStatus(); render(); }, 3000);
+      },
+    });
+    rzp.open();
+  } catch(err) {
+    alert("Something went wrong starting checkout: " + err.message);
+  }
+}
+
+async function startRestaurantPurchase(){
+  if(!sb || !currentUser){ alert("Sign in first to purchase — see the login screen."); return; }
+  const btn = document.getElementById('buyReportBtn');
+  btn.textContent = "STARTING...";
+  try {
+    const session = await sb.auth.getSession();
+    const res = await fetch(edgeFunctionUrl('create-payment'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.data.session.access_token },
+      body: JSON.stringify({ planType: 'restaurant_report' }),
+    });
+    const data = await res.json();
+    btn.textContent = "AUDIT YOUR HEALTHY MENU — ₹499 →";
+    if(!res.ok || data.error){ alert("Couldn't start checkout: " + (data.error || 'unknown error')); return; }
+
+    const rzp = new Razorpay({
+      key: data.keyId,
+      order_id: data.orderId,
+      amount: data.amount,
+      currency: "INR",
+      name: "WholAmino Menu Audit Report",
+      description: "One-time report purchase",
+      theme: { color: "#141414" },
+      handler: function(response){
+        alert("Payment submitted — it'll activate within a minute once confirmed. Reopen the app if it doesn't update automatically.");
+        setTimeout(async () => { await checkSubscriptionStatus(); render(); }, 3000);
+      },
+    });
+    rzp.open();
+  } catch(err) {
+    btn.textContent = "AUDIT YOUR HEALTHY MENU — ₹499 →";
+    alert("Something went wrong starting checkout: " + err.message);
+  }
+}
+
+async function doSignOut(){
+  if(!confirm("Sign out? You'll need to click the email link again to sign back in.")) return;
+  if(sb){
+    await sb.auth.signOut();
+  }
+  window.location.reload();
+}
+
+function continueWithoutAccount(){
+  document.getElementById('loginOverlay').classList.remove('show');
+  if(!state.onboarded[state.segment]) showOnboarding(state.segment);
+}
+
+async function loadDailyMetrics(){
+  if(!sb || !currentUser) return [];
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+  const startDate = thirtyDaysAgo.toISOString().slice(0,10);
+  const { data, error } = await sb.from('daily_metrics')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .gte('date', startDate)
+    .order('date');
+  if(error){ console.error('Daily metrics load failed:', error); return []; }
+  return data || [];
+}
+
+
+async function loadProgressData(){
+  // Fetched lazily, only when the Progress screen is actually opened — no
+  // reason to pull 30 days of history on every app load when Home only
+  // ever needs today's data.
+  if(!sb || !currentUser) return null;
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29); // today + 29 back = 30 days total
+  thirtyDaysAgo.setHours(0,0,0,0);
+  const { data, error } = await sb.from('logged_meals')
+    .select('usable_g, fiber_g, meal_slot, logged_at')
+    .eq('user_id', currentUser.id)
+    .gte('logged_at', thirtyDaysAgo.toISOString())
+    .order('logged_at');
+  if(error){ console.error('Progress load failed:', error); return null; }
+  return data || [];
+}
+
+async function loadUserData(){
+  if(!sb || !currentUser) return;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if(profile){
+    // A brand-new user's profile row was just auto-created by the signup trigger
+    // with hardcoded defaults (segment, name, sex, etc.) in the database —
+    // completely unaware of whatever they actually picked on the landing page
+    // or just typed into onboarding. Only trust the DB's values for these
+    // fields once they've genuinely onboarded into at least one segment;
+    // otherwise keep whatever's already in local state and push it to the DB
+    // right away. This also closes a race condition: if this function runs a
+    // second time (e.g. a duplicate sign-in event) before a just-completed
+    // onboarding's sync has actually landed in the database, this protects
+    // the user's real just-entered name/sex/weight/age from being silently
+    // overwritten by stale leftover defaults.
+    const isBrandNewProfile = !profile.onboarded_sports && !profile.onboarded_gym && !profile.onboarded_home;
+    if(!isBrandNewProfile){
+      state.name = profile.name; state.weight = profile.weight; state.age = profile.age; state.sex = profile.sex;
+      state.segment = profile.segment;
+    }
+    state.phase = profile.phase; state.goal = profile.goal; state.lifeStage = profile.life_stage; state.trainingStyle = profile.training_style || null;
+    state.onboarded = { SPORTS: profile.onboarded_sports, GYM: profile.onboarded_gym, HOME: profile.onboarded_home };
+    state.restaurantProfile = { name: profile.restaurant_name, cuisine: profile.restaurant_cuisine, location: profile.restaurant_location, contact: profile.restaurant_contact };
+    state.totalLogsUsed = profile.total_logs_used || 0; // lifetime count, never resets
+    if(isBrandNewProfile) syncProfile(); // persist their real landing-page choice, overwriting the DB's default
+    // Fiber/fluid/sleep/training are running/daily-state values, not date-filtered
+    // like meals are — reset them here if the stored date isn't today, so "daily
+    // tracking" is actually daily instead of accumulating across days.
+    const todayStr = new Date().toISOString().slice(0,10);
+    if(profile.last_logged_date === todayStr){
+      state.fiberLogged = profile.fiber_logged; state.fluidLogged = profile.fluid_logged; state.sleepLogged = profile.sleep_logged;
+      state.trainingCompleted = !!profile.training_completed;
+    } else {
+      // Day boundary crossed — snapshot yesterday's final numbers into
+      // daily_metrics BEFORE resetting, so hydration/sleep (which otherwise
+      // have no history at all, only ever "today's running value") start
+      // building a real historical record from here on.
+      if(profile.last_logged_date){
+        const prevDayStart = new Date(profile.last_logged_date + 'T00:00:00');
+        const prevDayEnd = new Date(profile.last_logged_date + 'T23:59:59');
+        const { data: prevMeals } = await sb.from('logged_meals').select('usable_g, fiber_g')
+          .eq('user_id', currentUser.id)
+          .gte('logged_at', prevDayStart.toISOString())
+          .lte('logged_at', prevDayEnd.toISOString());
+        const prevProtein = (prevMeals || []).reduce((s,m) => s + (m.usable_g||0), 0);
+        const prevFiberFromMeals = (prevMeals || []).reduce((s,m) => s + (m.fiber_g||0), 0);
+        const targets = computeTargets(); // best available approximation, same caveat as the day-by-day grid already discloses
+        const { error: snapErr } = await sb.from('daily_metrics').upsert({
+          user_id: currentUser.id, date: profile.last_logged_date,
+          protein_g: +prevProtein.toFixed(1), fiber_g: +(prevFiberFromMeals + (profile.fiber_logged||0)).toFixed(1),
+          fluid_l: profile.fluid_logged || 0, sleep_h: profile.sleep_logged || 0,
+          protein_target: targets.protein, fiber_target: targets.fiber, fluid_target: targets.fluid, sleep_target: targets.sleep,
+        }, { onConflict: 'user_id,date' });
+        if(snapErr) console.error('Daily metrics snapshot failed:', snapErr);
+      }
+      state.fiberLogged = 0; state.fluidLogged = 0; state.sleepLogged = 0; state.trainingCompleted = false;
+      syncProfile(); // persist the reset immediately, don't wait for the next manual change
+    }
+  }
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const { data: meals } = await sb.from('logged_meals').select('*').eq('user_id', currentUser.id).gte('logged_at', todayStart.toISOString()).order('logged_at');
+  if(meals){
+    state.todayMeals = meals.map(m => ({
+      id: m.id, name: m.name, claimedG: m.claimed_g, usableG: m.usable_g, score: m.score, tier: m.tier,
+      limitingAA: m.limiting_aa, limitingAALabel: m.limiting_aa_label, fiberG: m.fiber_g, mealSlot: m.meal_slot,
+      movedAfterMeal: m.moved_after_meal || false, mobilityType: m.mobility_type || null,
+      time: new Date(m.logged_at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
+    }));
+  }
+  const { data: menu } = await sb.from('restaurant_menu').select('*').eq('user_id', currentUser.id).order('created_at');
+  if(menu){
+    state.restaurantMenu = menu.map(m => ({
+      id: m.id, name: m.name, claimedG: m.claimed_g, usableG: m.usable_g, score: m.score, tier: m.tier,
+      limitingAA: m.limiting_aa, limitingAALabel: m.limiting_aa_label, fiberG: m.fiber_g,
+    }));
+  }
+  const { data: dishes } = await sb.from('my_dishes').select('*').eq('user_id', currentUser.id).order('created_at');
+  if(dishes){
+    state.myDishes = dishes.map(d => ({ id: d.id, name: d.name, recipe: d.recipe }));
+  }
+  await checkSubscriptionStatus();
+  render();
+}
+
+async function syncProfile(){
+  if(!sb || !currentUser) return;
+  const { error } = await sb.from('profiles').update({
+    name: state.name, weight: state.weight, age: state.age, sex: state.sex, segment: state.segment,
+    phase: state.phase, goal: state.goal, life_stage: state.lifeStage, training_style: state.trainingStyle,
+    onboarded_sports: state.onboarded.SPORTS, onboarded_gym: state.onboarded.GYM, onboarded_home: state.onboarded.HOME,
+    fiber_logged: state.fiberLogged, fluid_logged: state.fluidLogged, sleep_logged: state.sleepLogged,
+    training_completed: state.trainingCompleted,
+    total_logs_used: state.totalLogsUsed,
+    last_logged_date: new Date().toISOString().slice(0,10),
+    restaurant_name: state.restaurantProfile.name, restaurant_cuisine: state.restaurantProfile.cuisine,
+    restaurant_location: state.restaurantProfile.location, restaurant_contact: state.restaurantProfile.contact,
+    updated_at: new Date().toISOString(),
+  }).eq('id', currentUser.id);
+  if(error) console.error('Profile sync failed:', error);
+}
+
+async function syncMealInsert(entry){
+  if(!sb || !currentUser) return null;
+  const { data, error } = await sb.from('logged_meals').insert({
+    user_id: currentUser.id, name: entry.name, claimed_g: entry.claimedG, usable_g: entry.usableG,
+    score: entry.score, tier: entry.tier, limiting_aa: entry.limitingAA, limiting_aa_label: entry.limitingAALabel,
+    fiber_g: entry.fiberG||0, meal_slot: entry.mealSlot, segment: state.segment,
+    moved_after_meal: entry.movedAfterMeal || false, mobility_type: entry.mobilityType || null,
+  }).select().single();
+  if(error){ console.error('Meal sync failed:', error); return null; }
+  return data.id;
+}
+
+async function syncMealMobilityUpdate(id, moved, mobilityType){
+  if(!sb || !currentUser || !id) return;
+  const { error } = await sb.from('logged_meals').update({ moved_after_meal: moved, mobility_type: mobilityType || null }).eq('id', id);
+  if(error) console.error('Mobility sync failed:', error);
+}
+
+async function syncMealUpdate(id, entry){
+  if(!sb || !currentUser || !id) return;
+  const { error } = await sb.from('logged_meals').update({
+    name: entry.name, claimed_g: entry.claimedG, usable_g: entry.usableG,
+    score: entry.score, tier: entry.tier, limiting_aa: entry.limitingAA, limiting_aa_label: entry.limitingAALabel,
+    fiber_g: entry.fiberG||0, moved_after_meal: entry.movedAfterMeal||false, mobility_type: entry.mobilityType||null,
+  }).eq('id', id);
+  if(error) console.error('Meal update sync failed:', error);
+}
+
+async function syncMyDishInsert(name, recipe){
+  if(!sb || !currentUser) return null;
+  const { data, error } = await sb.from('my_dishes').insert({
+    user_id: currentUser.id, name, recipe,
+  }).select().single();
+  if(error){ console.error('My-dish sync failed:', error); return null; }
+  return data.id;
+}
+
+async function syncMenuUpsert(entry){
+  if(!sb || !currentUser) return null;
+  if(entry.id){
+    const { error } = await sb.from('restaurant_menu').update({
+      name: entry.name, claimed_g: entry.claimedG, usable_g: entry.usableG, score: entry.score, tier: entry.tier,
+      limiting_aa: entry.limitingAA, limiting_aa_label: entry.limitingAALabel, fiber_g: entry.fiberG||0,
+      updated_at: new Date().toISOString(),
+    }).eq('id', entry.id);
+    if(error) console.error('Menu update failed:', error);
+    return entry.id;
+  }
+  const { data, error } = await sb.from('restaurant_menu').insert({
+    user_id: currentUser.id, name: entry.name, claimed_g: entry.claimedG, usable_g: entry.usableG,
+    score: entry.score, tier: entry.tier, limiting_aa: entry.limitingAA, limiting_aa_label: entry.limitingAALabel,
+    fiber_g: entry.fiberG||0,
+  }).select().single();
+  if(error){ console.error('Menu insert failed:', error); return null; }
+  return data.id;
+}
+
+async function syncMenuDelete(id){
+  if(!sb || !currentUser || !id) return;
+  await sb.from('restaurant_menu').delete().eq('id', id);
+}
+
+async function syncMealsClear(){
+  if(!sb || !currentUser) return;
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  await sb.from('logged_meals').delete().eq('user_id', currentUser.id).gte('logged_at', todayStart.toISOString());
+}
+
+async function syncMenuClear(){
+  if(!sb || !currentUser) return;
+  await sb.from('restaurant_menu').delete().eq('user_id', currentUser.id);
+}
+
+function enterApp(){
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('app-shell').style.display = 'flex';
+}
+
+function selectLandingSegment(s){
+  enterApp();
+  setSegment(s);
+  if(sb && !currentUser){
+    localStorage.setItem('wholamino_pending_segment', s);
+    document.getElementById('loginOverlay').classList.add('show');
+  } else if(!state.onboarded[state.segment]){
+    showOnboarding(state.segment);
+  }
+}
+
+async function checkAuthAndInit(){
+  // A segment picked on the landing page lives only in JS memory — but the
+  // magic-link email opens in a BRAND NEW tab (sometimes a fully separate
+  // browser session, e.g. a fresh Safari Private tab, where localStorage
+  // doesn't carry over either). The URL survives that no matter what, so
+  // check it FIRST — it's the more reliable of the two — then fall back
+  // to localStorage for cases where the URL param isn't present.
+  const urlSegment = new URLSearchParams(window.location.search).get('segment');
+  const pendingSegment = urlSegment || localStorage.getItem('wholamino_pending_segment');
+  if(pendingSegment) state.segment = pendingSegment;
+  if(!sb){
+    // Unconfigured — same as always, skip the landing page entirely and
+    // behave exactly as the app did before this feature existed.
+    enterApp();
+    if(!state.onboarded[state.segment]) showOnboarding(state.segment);
+    return;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    // Returning signed-in user — skip the landing page, go straight in.
+    // Nobody who already has an account should see a marketing page first.
+    currentUser = session.user;
+    enterApp();
+    await loadUserData();
+    if(!state.onboarded[state.segment]) showOnboarding(state.segment);
+    localStorage.removeItem('wholamino_pending_segment');
+  }
+  // else: not signed in — leave the landing page showing (it's the default
+  // active screen), selectLandingSegment() handles what happens next.
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'SIGNED_IN' && session){
+      currentUser = session.user;
+      document.getElementById('loginOverlay').classList.remove('show');
+      await loadUserData();
+      if(!state.onboarded[state.segment]) showOnboarding(state.segment);
+      localStorage.removeItem('wholamino_pending_segment');
+    }
+  });
+}
+
+// ============================================================================
+// WHOLAMINO CANONICAL ENGINE — ported 1:1 from aminotrue-engine.py (pending file rename)
+// ============================================================================
+const REFERENCE = { His:15, Ile:30, Leu:59, Lys:45, SAA:22, AAA:38, Thr:23, Trp:6, Val:39 };
+const AA_LABELS = { His:"Histidine", Ile:"Isoleucine", Leu:"Leucine", Lys:"Lysine", SAA:"Methionine+Cysteine", AAA:"Phenylalanine+Tyrosine", Thr:"Threonine", Trp:"Tryptophan", Val:"Valine" };
+
+const SOURCES = {
+  whey:{name:"Whey Protein Isolate",digestibility:.99,protein_per_100g:80,fiber_per_100g:0,profile:{His:20,Ile:68,Leu:130,Lys:110,SAA:46,AAA:70,Thr:78,Trp:22,Val:65}},
+  casein:{name:"Casein",digestibility:.99,protein_per_100g:80,fiber_per_100g:0,profile:{His:30,Ile:55,Leu:100,Lys:85,SAA:33,AAA:105,Thr:45,Trp:14,Val:68}},
+  egg:{name:"Egg",digestibility:.98,protein_per_100g:12.5,fiber_per_100g:0,profile:{His:27,Ile:58,Leu:92,Lys:71,SAA:62,AAA:108,Thr:51,Trp:17,Val:76}},
+  soy:{name:"Soy Protein",digestibility:.92,protein_per_100g:16,fiber_per_100g:4.0,profile:{His:27,Ile:50,Leu:82,Lys:65,SAA:28,AAA:90,Thr:40,Trp:14,Val:52}},
+  pea:{name:"Pea Protein Isolate",digestibility:.88,protein_per_100g:80,fiber_per_100g:0,profile:{His:25,Ile:47,Leu:84,Lys:74,SAA:22,AAA:88,Thr:40,Trp:10,Val:50}},
+  rice:{name:"Rice",digestibility:.90,protein_per_100g:2.7,fiber_per_100g:0.4,profile:{His:24,Ile:42,Leu:84,Lys:38,SAA:45,AAA:100,Thr:38,Trp:13,Val:62}},
+  wheat:{name:"Wheat/Atta",digestibility:.87,protein_per_100g:12,fiber_per_100g:12.2,profile:{His:24,Ile:40,Leu:75,Lys:22,SAA:40,AAA:82,Thr:30,Trp:12,Val:46}},
+  ragi:{name:"Ragi",digestibility:.82,protein_per_100g:7.3,fiber_per_100g:11.8,profile:{His:22,Ile:38,Leu:90,Lys:25,SAA:35,AAA:90,Thr:32,Trp:15,Val:55}},
+  chana:{name:"Chana Dal",digestibility:.80,protein_per_100g:8.9,fiber_per_100g:5.5,profile:{His:28,Ile:45,Leu:78,Lys:70,SAA:25,AAA:90,Thr:40,Trp:10,Val:48}},
+  moong:{name:"Moong Dal",digestibility:.78,protein_per_100g:7.0,fiber_per_100g:4.5,profile:{His:30,Ile:47,Leu:82,Lys:75,SAA:20,AAA:92,Thr:38,Trp:11,Val:52}},
+  peanut:{name:"Peanut",digestibility:.87,protein_per_100g:25,fiber_per_100g:8.5,profile:{His:24,Ile:38,Leu:68,Lys:38,SAA:24,AAA:100,Thr:28,Trp:12,Val:46}},
+  hemp:{name:"Hemp Protein",digestibility:.85,protein_per_100g:25,fiber_per_100g:2.0,profile:{His:27,Ile:40,Leu:68,Lys:40,SAA:45,AAA:85,Thr:35,Trp:15,Val:50}},
+  paneer:{name:"Paneer",digestibility:.95,protein_per_100g:18,fiber_per_100g:0,profile:{His:28,Ile:52,Leu:95,Lys:78,SAA:30,AAA:100,Thr:42,Trp:13,Val:65}},
+  tofu:{name:"Tofu",digestibility:.91,protein_per_100g:8,fiber_per_100g:0.6,profile:{His:26,Ile:48,Leu:80,Lys:63,SAA:27,AAA:88,Thr:39,Trp:13,Val:51}},
+  cheese:{name:"Cheese",digestibility:.97,protein_per_100g:25,fiber_per_100g:0,profile:{His:32,Ile:56,Leu:102,Lys:88,SAA:32,AAA:108,Thr:44,Trp:13,Val:70}},
+  chicken:{name:"Chicken Breast",digestibility:.97,protein_per_100g:27,fiber_per_100g:0,profile:{His:34,Ile:51,Leu:79,Lys:89,SAA:38,AAA:74,Thr:43,Trp:11,Val:51}},
+  fish:{name:"Fish",digestibility:.96,protein_per_100g:20,fiber_per_100g:0,profile:{His:27,Ile:47,Leu:79,Lys:91,SAA:40,AAA:76,Thr:44,Trp:10,Val:52}},
+  mutton:{name:"Mutton",digestibility:.93,protein_per_100g:25,fiber_per_100g:0,profile:{His:32,Ile:48,Leu:78,Lys:85,SAA:36,AAA:73,Thr:42,Trp:11,Val:50}},
+  prawns:{name:"Prawns",digestibility:.90,protein_per_100g:20,fiber_per_100g:0,profile:{His:25,Ile:53,Leu:98,Lys:109,SAA:38,AAA:75,Thr:45,Trp:13,Val:53}},
+  mushroom:{name:"Mushroom",digestibility:.70,protein_per_100g:3,fiber_per_100g:2.5,profile:{His:22,Ile:38,Leu:64,Lys:42,SAA:26,AAA:78,Thr:32,Trp:11,Val:46}},
+  yogurt:{name:"Yogurt/Curd",digestibility:.96,protein_per_100g:3.5,fiber_per_100g:0,profile:{His:29,Ile:54,Leu:98,Lys:82,SAA:31,AAA:103,Thr:44,Trp:14,Val:67}},
+  toor:{name:"Toor Dal",digestibility:.79,protein_per_100g:7.0,fiber_per_100g:5.0,profile:{His:26,Ile:44,Leu:68,Lys:63,SAA:28,AAA:76,Thr:36,Trp:11,Val:49}},
+  rajma:{name:"Rajma",digestibility:.79,protein_per_100g:8.7,fiber_per_100g:6.4,profile:{His:25,Ile:42,Leu:68,Lys:63,SAA:25,AAA:76,Thr:35,Trp:10,Val:47}},
+  besan:{name:"Besan",digestibility:.79,protein_per_100g:22,fiber_per_100g:10.0,profile:{His:27,Ile:43,Leu:69,Lys:65,SAA:25,AAA:77,Thr:35,Trp:10,Val:48}},
+  idli:{name:"Idli",digestibility:.85,protein_per_100g:5.0,fiber_per_100g:1.5,profile:{His:27,Ile:45,Leu:70,Lys:38,SAA:30,AAA:80,Thr:34,Trp:10,Val:50}},
+  dosa:{name:"Dosa",digestibility:.85,protein_per_100g:6.0,fiber_per_100g:1.3,profile:{His:25,Ile:43,Leu:68,Lys:35,SAA:29,AAA:80,Thr:32,Trp:10,Val:48}},
+  sooji:{name:"Sooji/Semolina",digestibility:.87,protein_per_100g:12.0,fiber_per_100g:3.9,profile:{His:24,Ile:39,Leu:64,Lys:30,SAA:31,AAA:82,Thr:31,Trp:10,Val:46}},
+  poha:{name:"Poha",digestibility:.88,protein_per_100g:7.0,fiber_per_100g:1.2,profile:{His:22,Ile:38,Leu:63,Lys:30,SAA:32,AAA:82,Thr:31,Trp:10,Val:45}},
+  oats:{name:"Oats",digestibility:.86,protein_per_100g:13.0,fiber_per_100g:10.0,profile:{His:23,Ile:40,Leu:66,Lys:38,SAA:29,AAA:78,Thr:32,Trp:10,Val:52}},
+  potato:{name:"Potato",digestibility:.89,protein_per_100g:2.0,fiber_per_100g:2.2,profile:{His:20,Ile:39,Leu:66,Lys:38,SAA:30,AAA:78,Thr:31,Trp:10,Val:48}},
+  peas:{name:"Green Peas",digestibility:.88,protein_per_100g:5.4,fiber_per_100g:5.1,profile:{His:25,Ile:43,Leu:68,Lys:60,SAA:28,AAA:77,Thr:36,Trp:10,Val:50}},
+  veg:{name:"Mixed Vegetables",digestibility:.85,protein_per_100g:2.5,fiber_per_100g:2.5,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
+  millet:{name:"Millet",digestibility:.83,protein_per_100g:3.5,fiber_per_100g:3.8,profile:{His:25,Ile:40,Leu:69,Lys:30,SAA:35,AAA:82,Thr:31,Trp:11,Val:53}},
+
+  // --- Added after real user testing surfaced Caesar salad wasn't recognized ---
+  lettuce:{name:"Lettuce",digestibility:.85,protein_per_100g:1.2,fiber_per_100g:2.1,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
+  parmesan:{name:"Parmesan Cheese",digestibility:.97,protein_per_100g:38,fiber_per_100g:0,profile:{His:32,Ile:56,Leu:102,Lys:88,SAA:32,AAA:108,Thr:44,Trp:13,Val:70}},
+  croutons:{name:"Croutons (toasted bread)",digestibility:.87,protein_per_100g:10,fiber_per_100g:3.0,profile:{His:24,Ile:40,Leu:75,Lys:22,SAA:40,AAA:82,Thr:30,Trp:12,Val:46}},
+  dressing:{name:"Salad Dressing (generic)",digestibility:.85,protein_per_100g:1.0,fiber_per_100g:0,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
+};
+
+const FIX_SUGGESTION = {
+  Lys:"Add a lysine-rich legume — try Chana Dal or Moong Dal",
+  SAA:"Add a methionine-rich cereal or grain — try Rice or Wheat",
+  Thr:"Add Casein or Egg to top up threonine",
+  Trp:"Add Egg or Whey — both are strong in tryptophan",
+  His:"Add Whey or Moong Dal to top up histidine",
+  Ile:"Add Whey or Egg to top up isoleucine",
+  Leu:"Add Whey Isolate — the strongest leucine source here",
+  AAA:"Add Peanut or Casein to top up phenylalanine/tyrosine",
+  Val:"Add Whey or Rice to top up valine",
+};
+
+function computeScoreFromGrams(recipeGrams, claimedOverride) {
+  const contributions = recipeGrams.map(r => {
+    const src = SOURCES[r.source];
+    return { source: r.source, protein_g: r.grams * src.protein_per_100g / 100, fiber_g: r.grams * (src.fiber_per_100g||0) / 100 };
+  });
+  const totalProtein = contributions.reduce((s,c)=>s+c.protein_g,0);
+  const totalFiber = +contributions.reduce((s,c)=>s+c.fiber_g,0).toFixed(1);
+  if (totalProtein <= 0) return null;
+  const blend = contributions.map(c => ({ source: c.source, frac: c.protein_g / totalProtein }));
+  const ratios = {};
+  let limitingAA = null, minRatio = Infinity;
+  Object.keys(REFERENCE).forEach(aa => {
+    const digestible = blend.reduce((sum,b) => sum + b.frac * SOURCES[b.source].profile[aa] * SOURCES[b.source].digestibility, 0);
+    const ratio = digestible / REFERENCE[aa];
+    ratios[aa] = ratio;
+    if (ratio < minRatio) { minRatio = ratio; limitingAA = aa; }
+  });
+  const claimed = claimedOverride != null ? claimedOverride : +totalProtein.toFixed(1);
+  const score = Math.round(Math.min(minRatio, 1.5) * 100);
+  const usableG = +(claimed * Math.min(minRatio, 1)).toFixed(1);
+  return { score, limitingAA, limitingAALabel: AA_LABELS[limitingAA], usableG, claimedG: claimed, fiberG: totalFiber,
+           ratios, fixSuggestion: FIX_SUGGESTION[limitingAA] || "", recipeUsed: recipeGrams };
+}
+function tierForScore(score) {
+  if (score >= 100) return "COMPLETE";
+  if (score >= 85) return "STRONG";
+  return "GOOD — ONE ADDITION AWAY";
+}
+function tierClass(tier){ return tier==="COMPLETE"?"complete":tier==="STRONG"?"strong":"gap"; }
+
+const INGREDIENT_ALIASES = {
+  paneer:"paneer", tofu:"tofu", rice:"rice", dal:"toor", toor:"toor", toordal:"toor", chana:"chana", chickpea:"chana",
+  moong:"moong", rajma:"rajma", curd:"yogurt", yogurt:"yogurt", egg:"egg", chicken:"chicken", fish:"fish",
+  soy:"soy", soya:"soy", wheat:"wheat", atta:"wheat", peanut:"peanut", veg:"veg", vegetables:"veg", vegetable:"veg",
+  millet:"millet", besan:"besan", ragi:"ragi", oats:"oats", poha:"poha", potato:"potato", peas:"peas",
+  cheese:"cheese", whey:"whey", casein:"casein", hemp:"hemp", pea:"pea", sooji:"sooji", idli:"idli", dosa:"dosa",
+  lettuce:"lettuce", parmesan:"parmesan", crouton:"croutons", croutons:"croutons", dressing:"dressing", mayo:"dressing", mayonnaise:"dressing",
+  mutton:"mutton", lamb:"mutton", goat:"mutton", prawns:"prawns", prawn:"prawns", shrimp:"prawns", mushroom:"mushroom", mushrooms:"mushroom",
+};
+function parseRecipeText(text){
+  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
+  const items = [];
+  const unmatched = [];
+  lines.forEach(line=>{
+    const m = line.match(/^([a-zA-Z\s]+?)\s+(\d+(?:\.\d+)?)\s*g?$/i);
+    if(m){
+      const name = m[1].trim().toLowerCase().replace(/\s+/g,"");
+      const id = INGREDIENT_ALIASES[name];
+      if(id) items.push({source:id, grams:Number(m[2])});
+      else unmatched.push(line);
+    } else if(line){
+      unmatched.push(line);
+    }
+  });
+  return { items, unmatched };
+}
+
+function runAudit(){
+  const name = document.getElementById('auditDishName').value.trim() || 'Untitled Dish';
+  const declaredRaw = document.getElementById('auditDeclared').value;
+  const declared = declaredRaw ? Number(declaredRaw) : null;
+  const { items, unmatched } = parseRecipeText(document.getElementById('auditRecipe').value);
+  if(!items.length){
+    alert("Couldn't parse any ingredients. Use lines like \"paneer 120\" — one per line.");
+    return;
+  }
+  if(unmatched.length){
+    const proceed = confirm(`These lines weren't recognized and will be left OUT of the score, so the result may be incomplete:\n\n${unmatched.join('\n')}\n\nContinue anyway?`);
+    if(!proceed) return;
+  }
+  const r = computeScoreFromGrams(items, declared);
+  if(!r) return;
+  const tier = tierForScore(r.score);
+  const entry = { name, ...r, tier, time: new Date().toLocaleDateString() };
+  state.pendingResult = entry;
+  showResult(entry, false);
+  goTab('result');
+}
+
+function renderAuditPresets(){
+  document.getElementById('auditPresets').innerHTML = DISHES.slice(0,8).map(([name,recipe])=>
+    `<div class="chip" onclick='fillAuditFrom(${JSON.stringify(name)}, ${JSON.stringify(recipe)})'>${name}</div>`
+  ).join('');
+}
+function fillAuditFrom(name, recipe){
+  document.getElementById('auditDishName').value = name;
+  document.getElementById('auditRecipe').value = recipe.map(([s,g])=>`${s} ${g}`).join("\n");
+}
+
+// ---- Dish library ----
+const DISHES = [
+  ["Caesar Salad (with chicken)", [["chicken",100],["lettuce",80],["parmesan",20],["croutons",25],["dressing",20]]],
+  // --- South Indian, beyond idli/dosa/upma ---
+  ["Uttapam + Sambar", [["dosa",150],["toor",120],["veg",70]]],
+  ["Curd Rice", [["rice",180],["yogurt",150],["veg",30]]],
+  ["Sambar Rice", [["rice",180],["toor",140],["veg",70]]],
+  ["Rasam Rice", [["rice",180],["toor",80],["veg",40]]],
+  ["Ven Pongal", [["rice",150],["moong",90],["peanut",15]]],
+  ["Medu Vada + Sambar", [["moong",90],["toor",100],["veg",50]]],
+  // --- Popular North Indian / restaurant dishes ---
+  ["Butter Chicken + Rice", [["chicken",150],["rice",160],["yogurt",30]]],
+  ["Butter Chicken + Naan", [["chicken",150],["wheat",90],["yogurt",30]]],
+  ["Paneer Tikka Masala + Rice", [["paneer",120],["rice",160],["yogurt",30]]],
+  ["Palak Paneer + Roti", [["paneer",100],["wheat",90],["veg",100]]],
+  ["Dal Makhani + Rice", [["rajma",100],["moong",60],["rice",160]]],
+  ["Chicken Biryani", [["chicken",150],["rice",200]]],
+  ["Mutton Biryani", [["mutton",150],["rice",200]]],
+  ["Egg Biryani", [["egg",100],["rice",200]]],
+  ["Kadai Chicken + Roti", [["chicken",150],["wheat",90],["veg",80]]],
+  ["Malai Kofta + Rice", [["paneer",100],["potato",60],["rice",160],["yogurt",30]]],
+  // --- Street food / snacks ---
+  ["Pav Bhaji", [["potato",150],["veg",100],["wheat",80]]],
+  ["Chole Bhature", [["chana",150],["wheat",100]]],
+  ["Vada Pav", [["potato",120],["wheat",70],["besan",30]]],
+  ["Aloo Paratha + Curd", [["potato",100],["wheat",90],["yogurt",100]]],
+  // --- Chinese-Indian fusion ---
+  ["Veg Fried Rice", [["rice",200],["veg",100]]],
+  ["Chicken Fried Rice", [["chicken",120],["rice",200],["veg",60]]],
+  ["Chicken Manchurian + Rice", [["chicken",130],["rice",160],["besan",20]]],
+  ["Veg Hakka Noodles", [["wheat",180],["veg",100]]],
+  ["Chilli Paneer + Rice", [["paneer",120],["rice",160],["besan",20]]],
+  // --- Non-veg variety ---
+  ["Fish Curry + Rice", [["fish",150],["rice",160],["veg",40]]],
+  ["Egg Curry + Rice", [["egg",120],["rice",160],["veg",50]]],
+  ["Prawn Curry + Rice", [["prawns",150],["rice",160],["veg",40]]],
+  ["Mutton Curry + Rice", [["mutton",150],["rice",160],["veg",40]]],
+  ["Fish Fry + Rice", [["fish",130],["rice",160]]],
+  // --- Mushroom-based ---
+  ["Mushroom Curry + Rice", [["mushroom",150],["rice",160],["veg",30]]],
+  ["Mushroom Manchurian + Rice", [["mushroom",150],["rice",160],["besan",20]]],
+  // --- Breakfast / protein-forward ---
+  ["Sprouts Salad", [["moong",120],["veg",60]]],
+  ["Egg White Omelette + Toast", [["egg",150],["wheat",60]]],
+  ["Grilled Chicken + Rice", [["chicken",150],["rice",160]]],
+  ["2 Idli + Sambar", [["idli",105],["toor",120],["veg",60]]],
+  ["Dosa + Sambar", [["dosa",120],["toor",120],["veg",60]]],
+  ["Vegetable Upma", [["sooji",180],["peanut",15],["veg",70]]],
+  ["Besan Chilla", [["besan",100],["veg",70],["yogurt",80]]],
+  ["Chapati + Egg Bhurji", [["wheat",80],["egg",100],["veg",60]]],
+  ["Rice + Dal + Vegetable Curry", [["rice",180],["toor",150],["veg",150]]],
+  ["Rajma Rice", [["rice",180],["rajma",170],["veg",80]]],
+  ["Chole Rice", [["rice",180],["chana",170],["veg",80]]],
+  ["Dal Khichdi", [["rice",120],["moong",100],["veg",120]]],
+  ["Rice + Paneer Curry", [["rice",180],["paneer",100],["veg",100]]],
+  ["3 Roti + Sabzi", [["wheat",105],["veg",150]]],
+  ["2 Chapati + Dal", [["wheat",80],["toor",150],["veg",100]]],
+  ["Moong Dal Khichdi", [["rice",100],["moong",120],["veg",120]]],
+  ["Paneer Bhurji + Chapati", [["paneer",100],["wheat",80],["veg",70]]],
+  ["Soya Curry + Chapati", [["soy",80],["wheat",80],["veg",100]]],
+  ["Chicken Curry + Rice", [["chicken",150],["rice",160]]],
+  ["Egg Bhurji + Roti", [["egg",100],["wheat",80],["veg",60]]],
+  ["Moong Dal Chilla + Curd", [["moong",120],["veg",70],["yogurt",80]]],
+];
+
+// ---- State ----
+let state = {
+  segment: "SPORTS",
+  name: "Ananya",
+  weight: 65,
+  age: 22,
+  sex: "F",
+  phase: "competition",
+  goal: "general",
+  trainingStyle: null,
+  lifeStage: "none",
+  todayMeals: [],
+  fiberLogged: 0,
+  fluidLogged: 0,
+  sleepLogged: 0,
+  trainingCompleted: false,
+  totalLogsUsed: 0,
+  pendingResult: null,
+  restaurantMenu: [],
+  myDishes: [],
+  restaurantProfile: { name: "My Restaurant", cuisine: "North Indian", location: "", contact: "" },
+  onboarded: { SPORTS: false, GYM: false, HOME: false },
+};
+
+function computeTargets(){
+  const w = Number(state.weight) || 65;
+  const age = Number(state.age) || 25;
+
+  if(state.segment === "HOME"){
+    // ICMR-NIN age-banded baseline, not a flat adult rate for everyone
+    let proteinPerKg = 0.83; // adult 19-59, ICMR-NIN 2020 RDA (well-sourced)
+    let band = "Adult";
+    if(age < 10){ proteinPerKg = 1.0; band = "Child"; }
+    else if(age < 19){ proteinPerKg = 0.9; band = "Adolescent"; }
+    else if(age >= 60){ proteinPerKg = 1.0; band = "60+"; }
+    let lifeStageNote = "";
+    if(state.sex === "F" && state.lifeStage === "pregnant"){ proteinPerKg += 0.3; lifeStageNote = ", pregnancy adjustment"; }
+    if(state.sex === "F" && state.lifeStage === "lactating"){ proteinPerKg += 0.4; lifeStageNote = ", lactation adjustment"; }
+    const protein = Math.round(w * proteinPerKg);
+    const kcalEst = w * 30;
+    const fiber = Math.round(kcalEst * 30/2000);
+    const fluid = +(w * 0.03).toFixed(1);
+    // Sleep target age-banded — children/adolescents need meaningfully more than adults
+    let sleep = 8;
+    if(age < 10) sleep = 10;
+    else if(age < 19) sleep = 9;
+    else if(age >= 60) sleep = 7.5;
+    return { protein, fiber, fluid, sleep, label: `General adult — ${band}${lifeStageNote} (ICMR-NIN)` };
+  }
+
+  if(state.segment === "GYM"){
+    const proteinPerKg = { general: 1.2, muscle: 1.6, fatloss: 1.8 }[state.goal] || 1.2;
+    const protein = Math.round(w * proteinPerKg);
+    const kcalEst = w * 35;
+    const fiber = Math.round(kcalEst * 30/2000);
+    const fluid = +(w * 0.035 + 0.3).toFixed(1);
+    const goalLabel = { general: "General fitness", muscle: "Muscle gain", fatloss: "Fat loss" }[state.goal] || "General fitness";
+    const sleep = state.goal === "muscle" ? 8.5 : 7.5;
+    return { protein, fiber, fluid, sleep, label: "Gym — " + goalLabel };
+  }
+
+  if(state.segment === "RESTAURANT"){
+    const protein = Math.round(w * 0.83);
+    const kcalEst = w * 30;
+    const fiber = Math.round(kcalEst * 30/2000);
+    const fluid = +(w * 0.03).toFixed(1);
+    return { protein, fiber, fluid, sleep: 8, label: "Not applicable — use Log to audit a menu" };
+  }
+
+  // SPORTS — ISSN strength/power range, training-phase calibrated
+  // Hydration uses sex-differentiated badminton sweat-rate research (men 1.14 L/h, women 1.02 L/h)
+  const proteinPerKg = state.phase === "competition" ? 2.0 : 1.6;
+  const protein = Math.round(w * proteinPerKg);
+  const kcalEst = state.phase === "competition" ? w * 52 : w * 43;
+  const fiber = Math.round(kcalEst * 30/2000);
+  const sweatRate = state.sex === "M" ? 1.14 : 1.02;
+  const sessionHours = state.phase === "competition" ? 2.0 : 1.5;
+  const fluid = +(w * 0.035 + sweatRate * sessionHours * 0.3).toFixed(1);
+  const phaseLabel = state.phase === "competition" ? "Competition block" : "General training";
+  const sleep = state.phase === "competition" ? 9 : 8;
+  return { protein, fiber, fluid, sleep, label: "Sports — " + phaseLabel };
+}
+
+// Common Indian-English synonyms that don't literally appear in any dish name —
+// "sabji"/"sabzi" is one of the most common words in everyday Indian food speech,
+// far more common than the English "vegetable" our dish names actually use.
+const QUERY_SYNONYMS = {
+  sabji:"vegetable", sabzi:"vegetable", subzi:"vegetable", subji:"vegetable", sabjee:"vegetable",
+  chawal:"rice", anda:"egg", dahi:"curd",
+};
+
+function findDish(query){
+  const q = query.toLowerCase().replace(/[^a-z0-9\s]/g," ").trim();
+  if(!q) return null;
+  const queryTokens = q.split(/\s+/).filter(t=>t.length>2).map(t => QUERY_SYNONYMS[t] || t);
+  const wordsMatch = (dishToken, queryToken) => {
+    // Exact match, or a simple prefix relationship for plurals ("roti"/"rotis") —
+    // NOT a raw substring check, which is what let "veggies" wrongly match "egg"
+    // (egg is hidden inside veggies as a substring, but they're different words).
+    if(dishToken === queryToken) return true;
+    if(dishToken.length>=4 && queryToken.startsWith(dishToken)) return true;
+    if(queryToken.length>=4 && dishToken.startsWith(queryToken)) return true;
+    return false;
+  };
+  const bestMatchIn = (list) => {
+    let best=null, bestScore=0;
+    list.forEach(([name, recipe])=>{
+      const n = name.toLowerCase();
+      const tokens = n.split(/\s+/).filter(t=>t.length>2).map(t => QUERY_SYNONYMS[t] || t);
+      const hits = tokens.filter(t => queryTokens.some(qt => wordsMatch(t, qt))).length;
+      const score = hits/(tokens.length||1);
+      // Require at least half the dish's meaningful words to match — a single shared
+      // generic word (e.g. "curry", "rice") is not enough to silently pick a dish.
+      if(score>bestScore && score>=0.5){ bestScore=score; best=[name,recipe]; }
+    });
+    return best;
+  };
+  // Personal dishes checked first, and win outright if they qualify — a user's own
+  // saved recipe should never lose to a generic preset just because the preset's
+  // name happens to match slightly more of the typed words.
+  const personalMatch = bestMatchIn(state.myDishes.map(d => [d.name, d.recipe]));
+  if(personalMatch) return personalMatch;
+  return bestMatchIn(DISHES);
+}
+
+// Common Indian foods people almost always state a COUNT for ("4 idli", "3 roti")
+// — without this, a stated quantity was silently discarded during tokenization
+// (numbers are too short to pass the word-length filter) and the app always
+// used a fixed preset amount regardless of what was actually eaten.
+const COUNTABLE_UNITS = {
+  idli: { source: 'idli', gramsPerUnit: 52.5 }, idlis: { source: 'idli', gramsPerUnit: 52.5 },
+  roti: { source: 'wheat', gramsPerUnit: 35 }, rotis: { source: 'wheat', gramsPerUnit: 35 },
+  chapati: { source: 'wheat', gramsPerUnit: 35 }, chapatis: { source: 'wheat', gramsPerUnit: 35 },
+  dosa: { source: 'dosa', gramsPerUnit: 120 }, dosas: { source: 'dosa', gramsPerUnit: 120 },
+};
+
+// Tries "<count> <countable unit> [remaining text]" first (e.g. "4 idli chutney")
+// — scales the counted item by the actual stated quantity, and separately tries
+// to match whatever's left over rather than silently guessing a substitute.
+function findCountableUnitMatch(query){
+  const m = query.trim().match(/^(\d+)\s+([a-zA-Z]+)\s*(.*)$/i);
+  if(!m) return null;
+  const count = Number(m[1]);
+  const unitWord = m[2].toLowerCase();
+  const remainder = m[3].trim();
+  const unit = COUNTABLE_UNITS[unitWord];
+  if(!unit || !count || count <= 0) return null;
+
+  const recipe = [[unit.source, Math.round(count * unit.gramsPerUnit)]];
+  const nameParts = [`${count} ${unitWord}`];
+  const unmatchedParts = [];
+
+  if(remainder){
+    const restMatch = findDishCombo(remainder);
+    if(restMatch && restMatch.partsMatched === restMatch.partsTotal){
+      // Skip any ingredient in the remainder match that's the SAME source as
+      // the counted unit (e.g. "sambar" matching a preset that itself bundles
+      // idli) — the explicit count is authoritative, don't double it up.
+      restMatch.recipe.filter(ing => ing[0] !== unit.source).forEach(ing => recipe.push(ing));
+      nameParts.push(restMatch.name);
+    } else {
+      unmatchedParts.push(remainder);
+    }
+  }
+
+  return {
+    name: nameParts.join(' + '),
+    recipe,
+    combo: nameParts.length > 1,
+    partsMatched: unmatchedParts.length ? 1 : (remainder ? 2 : 1),
+    partsTotal: remainder ? 2 : 1,
+  };
+}
+
+
+// which used to mean typing a combo silently kept just the last/best-matching
+// part and dropped the rest with zero warning. This detects combo phrasing,
+// matches each part separately, and merges the results into one recipe.
+function findDishCombo(query){
+  const parts = query.split(/\s+(?:with|and|\+|,)\s+/i).map(p => p.trim()).filter(Boolean);
+  if(parts.length <= 1){
+    const single = findDish(query);
+    return single ? { name: single[0], recipe: single[1], combo: false, partsMatched: 1, partsTotal: 1 } : null;
+  }
+  const matches = parts.map(p => findDish(p)).filter(Boolean);
+  if(matches.length === 0) return null;
+  if(matches.length === 1){
+    return { name: matches[0][0], recipe: matches[0][1], combo: false, partsMatched: 1, partsTotal: parts.length };
+  }
+
+  // Two or more distinct dishes matched — combine them into one recipe.
+  // Duplicate ingredients (e.g. "veg" from both parts) are fine — the engine
+  // just sums grams per source, no special merging needed.
+  const combinedName = matches.map(m => m[0]).join(" + ");
+  const combinedRecipe = [];
+  matches.forEach(m => m[1].forEach(ing => combinedRecipe.push(ing)));
+  return { name: combinedName, recipe: combinedRecipe, combo: true, partsMatched: matches.length, partsTotal: parts.length };
+}
+
+function inferMealSlot(){
+  const h = new Date().getHours();
+  if(h < 11) return "Breakfast";
+  if(h < 16) return "Lunch";
+  return "Dinner";
+}
+
+function cycleMealSlot(){
+  if(!state.pendingResult) return;
+  const slots = ["Breakfast","Lunch","Dinner"];
+  const idx = slots.indexOf(state.pendingResult.mealSlot);
+  state.pendingResult.mealSlot = slots[(idx+1) % slots.length];
+  showResult(state.pendingResult, false);
+}
+
+function logMeal(name, recipe){
+  const blend = recipe.map(([s,g])=>({source:s,grams:g}));
+  const r = computeScoreFromGrams(blend);
+  if(!r) return;
+  const tier = tierForScore(r.score);
+  const entry = { name, ...r, tier, time: new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), mealSlot: inferMealSlot() };
+  state.pendingResult = entry;
+  showResult(entry, false);
+  goTab('result');
+}
+
+const FREE_LOG_LIMIT = 9;
+const FREE_TRIAL_DAYS = 3;
+function daysSinceSignup(){
+  if(!currentUser || !currentUser.created_at) return 0;
+  const signedUp = new Date(currentUser.created_at);
+  return (Date.now() - signedUp.getTime()) / (1000*60*60*24);
+}
+
+async function saveResult(){
+  if(!state.pendingResult) return;
+  if(state.segment === "RESTAURANT"){
+    const entry = state.pendingResult;
+    const existingIdx = state.restaurantMenu.findIndex(d=>d.name === entry.name);
+    if(existingIdx >= 0){
+      entry.id = state.restaurantMenu[existingIdx].id; // preserve DB id — this becomes an update, not a duplicate insert
+      state.restaurantMenu[existingIdx] = entry;
+    } else {
+      state.restaurantMenu.push(entry);
+    }
+    state.pendingResult = null;
+    render();
+    goTab('menu');
+    const newId = await syncMenuUpsert(entry);
+    if(newId && !entry.id) entry.id = newId;
+    return;
+  }
+  // Program gate — only meaningful once real accounts exist (sb configured
+  // and signed in); local-only/unconfigured mode has no payment system at all,
+  // so it stays unrestricted, matching how it always behaved. START is the
+  // only tier with the 9-log/3-day limit — HABIT and TRANSFORM log without
+  // restriction until their own purchased window expires (at which point
+  // getCurrentTier() correctly falls back to 'start' on its own).
+  if(sb && currentUser && getCurrentTier() === 'start' && (state.totalLogsUsed >= FREE_LOG_LIMIT || daysSinceSignup() >= FREE_TRIAL_DAYS)){
+    state.pendingResult = null;
+    const reason = daysSinceSignup() >= FREE_TRIAL_DAYS && state.totalLogsUsed < FREE_LOG_LIMIT
+      ? `Your ${FREE_TRIAL_DAYS}-day START program has ended.`
+      : `You've used all ${FREE_LOG_LIMIT} free logs.`;
+    alert(`${reason} Choose HABIT (₹299/30 days) or TRANSFORM (₹799/90 days) in Profile to keep tracking.`);
+    goTab('profile');
+    render();
+    return;
+  }
+  const entry = state.pendingResult;
+  const existingIdx = state.todayMeals.findIndex(m => m.mealSlot === entry.mealSlot);
+  let isReplacement = false;
+  if(existingIdx >= 0){
+    const proceed = confirm(`${entry.mealSlot} is already logged (${state.todayMeals[existingIdx].name}). Replace it with this new entry?`);
+    if(!proceed){ state.pendingResult = null; render(); goTab('home'); return; }
+    entry.id = state.todayMeals[existingIdx].id; // keep the same DB row — this becomes an update, not a duplicate
+    state.todayMeals[existingIdx] = entry;
+    isReplacement = true;
+  } else {
+    state.todayMeals.push(entry);
+  }
+  state.pendingResult = null;
+  render();
+  goTab('home');
+  if(isReplacement && entry.id){
+    await syncMealUpdate(entry.id, entry);
+  } else {
+    const newId = await syncMealInsert(entry);
+    if(newId) entry.id = newId;
+  }
+  if(sb && currentUser && !isReplacement){
+    state.totalLogsUsed += 1; // replacing an existing log is an edit, not a new log — doesn't cost a free-tier slot
+    syncProfile();
+    render();
+  }
+}
+
+function addFiber(g){ state.fiberLogged += g; render(); syncProfile(); }
+function addFluid(l){ state.fluidLogged += l; render(); syncProfile(); }
+function addFluidCustom(){
+  const input = document.getElementById('fluidCustomInput');
+  const ml = Number(input.value);
+  if(!ml || ml <= 0){ alert("Enter a number of ml first."); return; }
+  state.fluidLogged += ml/1000;
+  input.value = '';
+  render();
+  syncProfile();
+}
+function setSleep(v){ state.sleepLogged = Number(v) || 0; render(); syncProfile(); }
+function toggleTrainingCompleted(){
+  state.trainingCompleted = !state.trainingCompleted;
+  render();
+  syncProfile();
+}
+
+function setPhase(p){ state.phase = p; render(); syncProfile(); }
+function setGoal(g){ state.goal = g; render(); syncProfile(); }
+function setTrainingStyle(s){ state.trainingStyle = s; render(); syncProfile(); }
+function setSex(s){ state.sex = s; render(); syncProfile(); }
+function setLifeStage(l){ state.lifeStage = l; render(); syncProfile(); }
+function onProfileChange(){
+  state.name = document.getElementById('nameInput').value || 'Athlete';
+  state.weight = Number(document.getElementById('weightInput').value) || 65;
+  state.age = Number(document.getElementById('ageInput').value) || 25;
+  render();
+  syncProfile();
+}
+function setSegment(s){
+  const wasRestaurant = state.segment === "RESTAURANT";
+  state.segment = s;
+  render();
+  syncProfile();
+  const nowRestaurant = s === "RESTAURANT";
+  if(nowRestaurant){
+    if(!wasRestaurant) goTab('menu');
+    return;
+  }
+  if(wasRestaurant) goTab('home');
+  if(!state.onboarded[s]) showOnboarding(s);
+}
+
+// ---- Onboarding (first time entering a personal segment) ----
+let onboardSegment = null;
+let onboardAnswer = null;
+
+const ONBOARD_CONTENT = {
+  SPORTS: {
+    eyebrow: "FIRST TIME IN SPORTS MODE",
+    title: "Let's set up your training profile",
+    sub: "Sets your daily protein, fiber, and fluid targets using ISSN strength/power ranges and real badminton sweat-rate research. Change it anytime in Profile.",
+    options: [
+      { value: "general", label: "General training", desc: "1.6g protein/kg — regular training days" },
+      { value: "competition", label: "Competition block", desc: "2.0g protein/kg — intensive training or nearing competition" },
+    ],
+  },
+  GYM: {
+    eyebrow: "FIRST TIME IN GYM MODE",
+    title: "What's your training goal?",
+    sub: "General fitness, muscle gain, and fat loss all call for genuinely different protein targets — this sets yours.",
+    options: [
+      { value: "general", label: "General fitness", desc: "1.2g protein per kg body weight" },
+      { value: "muscle", label: "Muscle gain", desc: "1.6g protein per kg body weight" },
+      { value: "fatloss", label: "Fat loss, preserving muscle", desc: "1.8g protein per kg body weight" },
+    ],
+  },
+  HOME: {
+    eyebrow: "FIRST TIME IN WORKING PROFESSIONALS MODE",
+    title: "Who are you tracking for?",
+    sub: "Built for everyday nutrition on a sedentary work schedule, plus evidence-backed post-meal mobility habits for metabolic health — targets use ICMR-NIN's general adult guidelines, age-banded automatically, whether it's your own meals or someone else's in your home.",
+    options: null,
+  },
+};
+
+function showOnboarding(segment){
+  onboardSegment = segment;
+  const cfg = ONBOARD_CONTENT[segment];
+  document.getElementById('onboardEyebrow').textContent = cfg.eyebrow;
+  document.getElementById('onboardTitle').textContent = cfg.title;
+  document.getElementById('onboardSub').textContent = cfg.sub;
+  // 'Athlete' is a hardcoded default set by the Supabase signup trigger for
+  // brand-new profiles (server-side, not this file) — showing it here as if
+  // it were a real value invites a first-time user to just tap through
+  // without noticing it's not their actual name. Treat it as blank here;
+  // a genuinely returning user's real saved name is untouched.
+  const displayName = state.name === 'Athlete' ? '' : (state.name || '');
+  document.getElementById('onboardName').value = displayName;
+  document.getElementById('onboardWeight').value = state.weight;
+  document.getElementById('onboardAge').value = state.age;
+  onboardSetSex(state.sex);
+  document.getElementById('onboardOverlay').classList.add('show');
+}
+
+function onboardSetSex(sex){
+  state.sex = sex;
+  const styleBtn = (id, active) => {
+    document.getElementById(id).style.background = active ? 'var(--ink)' : 'var(--panel)';
+    document.getElementById(id).style.color = active ? '#fff' : 'var(--ink)';
+  };
+  styleBtn('onboardSexF', sex==='F'); styleBtn('onboardSexM', sex==='M');
+  renderOnboardOptions();
+}
+
+function renderOnboardOptions(){
+  const cfg = ONBOARD_CONTENT[onboardSegment];
+  let options = cfg.options;
+  if(onboardSegment === 'HOME'){
+    options = state.sex === 'F' ? [
+      { value: "none", label: "Just tracking normally", desc: "" },
+      { value: "pregnant", label: "Pregnant", desc: "Raises the protein target — check with your doctor too" },
+      { value: "lactating", label: "Lactating", desc: "Raises the protein target — check with your doctor too" },
+    ] : null;
+  }
+  if(!options){
+    document.getElementById('onboardOptions').innerHTML = '';
+    onboardAnswer = 'none';
+    return;
+  }
+  if(!onboardAnswer || !options.find(o=>o.value===onboardAnswer)) onboardAnswer = options[0].value;
+  document.getElementById('onboardOptions').innerHTML = options.map(o=>
+    `<div class="onboard-opt ${o.value===onboardAnswer?'selected':''}" onclick="selectOnboardOption('${o.value}')"><b>${o.label}</b>${o.desc?`<span>${o.desc}</span>`:''}</div>`
+  ).join('');
+}
+function selectOnboardOption(v){ onboardAnswer = v; renderOnboardOptions(); }
+
+function completeOnboarding(){
+  // Read the form BEFORE the blocking confirm() dialog, not after — a native
+  // dialog interrupting the page is a plausible place for a stale DOM read
+  // to slip in, and there's no reason to risk it when capturing first costs
+  // nothing.
+  const enteredName = document.getElementById('onboardName').value.trim();
+  const enteredWeight = Number(document.getElementById('onboardWeight').value);
+  const enteredAge = Number(document.getElementById('onboardAge').value);
+
+  const proceed = confirm(`Setting up your ${onboardSegment==='SPORTS'?'Sports':onboardSegment==='GYM'?'Gym':'Working Professionals'} experience — targets and tracking built around this. You can always switch later from Settings. Ready?`);
+  if(!proceed) return;
+  state.name = enteredName || state.name;
+  state.weight = enteredWeight || state.weight;
+  state.age = enteredAge || state.age;
+  if(onboardSegment === 'SPORTS') state.phase = onboardAnswer;
+  if(onboardSegment === 'GYM') state.goal = onboardAnswer;
+  if(onboardSegment === 'HOME') state.lifeStage = onboardAnswer;
+  state.onboarded[onboardSegment] = true;
+  document.getElementById('onboardOverlay').classList.remove('show');
+  render();
+  goTab('home');
+  syncProfile();
+}
+
+function switchToGym(){
+  if(confirm("Switch to Gym / Yoga mode? Your logged history stays, but targets and tracking will now be built around training instead of general daily nutrition.")){
+    state.onboarded.HOME = false; // only HOME unlocks — doesn't disturb SPORTS if that was ever set
+    state.segment = 'GYM';
+    render();
+    showOnboarding('GYM'); // guided straight into Gym's onboarding, not back to a generic picker
+    syncProfile();
+  }
+}
+
+function resetProfileSegment(){
+  if(confirm("This unlocks the segment switcher so you can pick a different one (Sports/Gym/Home) — your logged history stays, but you'll go through that segment's onboarding again. Continue?")){
+    state.onboarded = { SPORTS: false, GYM: false, HOME: false };
+    render();
+    goTab('home');
+    syncProfile();
+  }
+}
+
+function resetSession(){
+  if(confirm("Clear today's logged meals, fiber, fluid, sleep, and training status? This can't be undone.")){
+    state.todayMeals = [];
+    state.fiberLogged = 0;
+    state.fluidLogged = 0;
+    state.sleepLogged = 0;
+    state.trainingCompleted = false;
+    render();
+    goTab('home');
+    syncMealsClear();
+    syncProfile();
+  }
+}
+
+function goTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const screenMap = {home:'screen-home', log:'screen-log', history:'screen-history', profile:'screen-profile', result:'screen-result',
+                      menu:'screen-menu', audit:'screen-audit', reports:'screen-reports', rprofile:'screen-restaurant-profile',
+                      progress:'screen-progress'};
+  document.getElementById(screenMap[tab]).classList.add('active');
+  if(document.getElementById('tabBtn-'+tab)) document.getElementById('tabBtn-'+tab).classList.add('active');
+  if(tab==='log') renderDishBrowser();
+  if(tab==='history'){ renderHistory(); renderMealSlotSections(); renderNextMealBanner(); }
+  if(tab==='menu') renderMenu();
+  if(tab==='audit') renderAuditPresets();
+  if(tab==='reports') renderReports();
+  if(tab==='progress') renderProgress();
+}
+
+function showResult(entry, saved){
+  document.getElementById('resultTitle').textContent = entry.name;
+  const tc = tierClass(entry.tier);
+  const mealSlotBadge = entry.mealSlot ? (saved
+    ? `<div class="conf-badge" style="background:#E5E9F5;color:#5B6FA8;margin-bottom:10px;display:inline-block;">COUNTED AS: ${entry.mealSlot.toUpperCase()}</div>`
+    : `<div class="conf-badge" style="background:#E5E9F5;color:#5B6FA8;margin-bottom:10px;display:inline-block;cursor:pointer;" onclick="cycleMealSlot()">COUNTED AS: ${entry.mealSlot.toUpperCase()} (tap to change)</div>`
+  ) : '';
+  const recipeLine = entry.recipeUsed ? `<div class="conf-note" style="margin-bottom:10px;"><strong>Based on:</strong> ${entry.recipeUsed.map(r => `${SOURCES[r.source].name} (${r.grams}g)`).join(', ')} — not what you meant? Tap "Not in the list?" below to enter it exactly.</div>` : '';
+  const normalize = s => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const matchLine = (entry.originalQuery && normalize(entry.originalQuery) !== normalize(entry.name)) ? `<div class="conf-note" style="margin-bottom:10px;background:#FFF8E7;"><strong>You searched:</strong> "${entry.originalQuery}" &nbsp;→&nbsp; <strong>Closest match:</strong> "${entry.name}" — this is the nearest dish in our library, not necessarily an exact match to what you meant.</div>` : '';
+  const mobilityOptions = [
+    { key: 'soleus', label: 'Soleus push-up (seated)', duration: 'Ongoing habit through the day, not a quick single dose', stat: '52% less glucose spike, 60% less insulin \u2014 but that\u2019s from ~270 min (4.5h) of near-continuous reps through the day, not a few minutes after one meal', src: 'Hamilton et al., iScience 2022', url: 'https://doi.org/10.1016/j.isci.2022.104869', campaignUrl: 'https://www.naatibru.com/soleus-heel-raise-campaign', campaignLabel: 'Join NaatiBru\u2019s Soleus Challenge' },
+    { key: 'chairstand', label: 'Chair stands (10x, repeated)', duration: '1 min now, repeat every 30 min through your day', stat: 'Matched or beat a 2-min walk for lowering insulin response when kept up through the day', src: 'J Appl Physiol, 2021', url: 'https://doi.org/10.1152/japplphysiol.00796.2020' },
+    { key: 'stairs', label: 'Stair climbing', duration: '1\u201310 min, right after this meal', stat: 'Just 1 min shows a real effect; 3 min improves insulin sensitivity; 10 min \u2248 90 min of walking for HbA1c', src: 'Moore et al., J Exerc Sci Fit 2024', url: 'https://doi.org/10.1016/j.jesf.2024.03.004' },
+    { key: 'walk', label: '10-minute walk', duration: '10 min, right after this meal', stat: '~22% lower glucose spike \u2014 the classic, well-replicated option', src: 'Reynolds et al., Diabetologia 2016', url: 'https://doi.org/10.1007/s00125-016-4085-2' },
+  ];
+  const mobilityCard = (state.segment === 'HOME' && entry.mealSlot) ? `
+    <div class="fix-card" style="border-color:#5B6FA8;">
+      <div class="h" style="color:#5B6FA8;">POST-MEAL MOBILITY \u2014 PICK WHAT'S PRACTICAL RIGHT NOW</div>
+      <p style="margin-bottom:8px;">All three are real, evidence-backed ways to blunt a post-meal blood sugar spike \u2014 pick whichever fits where you are.</p>
+      ${mobilityOptions.map(opt => `
+        <div class="nextmeal-suggestion" style="background:${entry.mobilityType===opt.key?'#E5E9F5':'var(--panel)'};border:1px solid var(--rule);color:var(--ink);margin-bottom:6px;" onclick="setMobilityType('${entry.mealSlot}','${opt.key}')">
+          <b style="font-size:12px;">${entry.mobilityType===opt.key?'\u2713 ':''}${opt.label}</b>
+          <span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;color:#5B6FA8;margin:2px 0 4px;">${opt.duration}</span>
+          <span style="color:var(--ink-soft);">${opt.stat} \u2014 <a href="${opt.url}" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="font-style:italic;color:inherit;text-decoration:underline;">${opt.src}</a></span>
+          ${opt.campaignUrl ? `<a href="${opt.campaignUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="display:block;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:#83DF52;">\u2192 ${opt.campaignLabel}</a>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+  const LIMITING_AA_EXPLAIN = {
+    HOME: `<div class="conf-note" style="margin-bottom:10px;">Your body can only use as much protein as its scarcest essential building block allows — right now that's <strong>${entry.limitingAALabel}</strong>. Even with plenty of everything else, this one ingredient is what capped ${entry.claimedG}g claimed down to ${entry.usableG}g your body could actually use. Adding a ${entry.limitingAALabel}-rich food next time raises that cap.</div>`,
+    GYM: `<div class="conf-note" style="margin-bottom:10px;">This meal's usable protein was capped by <strong>${entry.limitingAALabel}</strong> — your body can only use as much as its scarcest amino acid allows, so this is your leverage point for next time.</div>`,
+    SPORTS: `<div class="conf-note" style="margin-bottom:10px;">Limiting amino acid: <strong>${entry.limitingAALabel}</strong> — the scarcest essential amino acid in this meal, capping usable protein regardless of total intake.</div>`,
+  };
+  const limitingAAExplain = entry.limitingAALabel ? (LIMITING_AA_EXPLAIN[state.segment] || LIMITING_AA_EXPLAIN.HOME) : '';
+  document.getElementById('resultBody').innerHTML = `
+    ${mealSlotBadge}
+    ${matchLine}
+    ${recipeLine}
+    <div class="split-box">
+      <div class="split-half claimed"><div class="split-lbl">CLAIMED</div><div class="split-num">${entry.claimedG}<span style="font-size:12px;">g</span></div></div>
+      <div class="split-half usable"><div class="split-lbl">USABLE</div><div class="split-num">${entry.usableG}<span style="font-size:12px;">g</span></div></div>
+    </div>
+    <div class="strip">
+      <div>LIMITING AMINO ACID: <strong>${entry.limitingAALabel}</strong></div>
+      <div>SCORE: <strong>${entry.score}</strong> &nbsp;<span style="font-weight:700;color:${tc==='complete'?'var(--usable)':tc==='strong'?'var(--warn)':'var(--claimed)'};">${entry.tier}</span></div>
+      <div>FIBER FROM THIS MEAL: <strong>${entry.fiberG||0}g</strong></div>
+    </div>
+    ${limitingAAExplain}
+    <div class="fix-card"><div class="h">SUGGESTED FIX</div><p>${entry.fixSuggestion || "Nothing needed — every essential amino acid clears requirement."}</p></div>
+    ${mobilityCard}
+    <div class="conf-row"><div class="conf-badge">ESTIMATED</div><div class="conf-note">Illustrative composition, not lab-verified</div></div>
+    <div class="section-lbl">AMINO ACID COVERAGE</div>
+    ${entry.ratios ? Object.keys(REFERENCE).map(aa=>{
+      const pct = Math.round(entry.ratios[aa]*100);
+      const isLim = aa===entry.limitingAA;
+      return `<div class="coverage-row"><div class="coverage-top"><span>${AA_LABELS[aa]}</span><span>${pct}%</span></div><div class="coverage-track"><div class="coverage-fill" style="width:${Math.min(pct,100)}%;background:${isLim?'var(--claimed)':'var(--usable)'};"></div></div></div>`;
+    }).join('') : `<div class="conf-note">Detailed amino acid breakdown isn't stored for past entries — only the overall score is. Log it fresh to see the full coverage.</div>`}
+    <button class="save-btn" onclick="saveResult()" ${saved?'disabled':''}>${saved?(state.segment==='RESTAURANT'?'ON MENU':'SAVED TO TODAY LOG'):(state.segment==='RESTAURANT'?'SAVE TO MENU':'SAVE TO TODAY LOG')}</button>
+  `;
+}
+
+function setMobilityType(slot, type){
+  let target = null;
+  let isSaved = false;
+  if(state.pendingResult && state.pendingResult.mealSlot === slot){
+    target = state.pendingResult;
+  } else {
+    target = state.todayMeals.find(m => m.mealSlot === slot);
+    isSaved = true;
+  }
+  if(!target) return;
+  target.mobilityType = target.mobilityType === type ? null : type; // tap again to un-select
+  target.movedAfterMeal = !!target.mobilityType;
+  showResult(target, isSaved);
+  if(isSaved && target.id){
+    syncMealMobilityUpdate(target.id, target.movedAfterMeal, target.mobilityType);
+  }
+}
+
+function renderDishBrowser(){
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const filtered = DISHES.filter(([name])=>name.toLowerCase().includes(q));
+  document.getElementById('dishBrowser').innerHTML = filtered.map(([name,recipe])=>{
+    return `<div class="activity-row" onclick='logMeal(${JSON.stringify(name)}, ${JSON.stringify(recipe)})'><div class="activity-name">${name}</div><span style="color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:11px;">›</span></div>`;
+  }).join('') || '<div class="empty-note">No dishes match.</div>';
+}
+
+function logMealToSlot(name, recipe, slot, originalQuery){
+  const blend = recipe.map(([s,g])=>({source:s,grams:g}));
+  const r = computeScoreFromGrams(blend);
+  if(!r) return;
+  const tier = tierForScore(r.score);
+  const entry = { name, ...r, tier, time: new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), mealSlot: slot, originalQuery: originalQuery || null };
+  state.pendingResult = entry;
+  showResult(entry, false);
+  goTab('result');
+}
+
+function logFromTextSlot(slot){
+  const input = document.getElementById('mealInput'+slot);
+  const queryText = input.value;
+  const match = findCountableUnitMatch(queryText) || findDishCombo(queryText);
+  if(!match){
+    alert("No close match found in the dish library. Try \"Not in the list?\" below to enter it as ingredients instead.");
+    return;
+  }
+  if(match.partsMatched < match.partsTotal){
+    const proceed = confirm(`Only recognized ${match.partsMatched} of ${match.partsTotal} items in "${queryText}" — matched: ${match.name}. The rest will be left out of the score. Continue anyway?`);
+    if(!proceed) return;
+  }
+  logMealToSlot(match.name, match.recipe, slot, queryText);
+  input.value = '';
+}
+
+function toggleCustomEntry(slot){
+  const el = document.getElementById('customEntry'+slot);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+function logCustomToSlot(slot){
+  const name = document.getElementById('customName'+slot).value.trim() || 'Custom meal';
+  const { items, unmatched } = parseRecipeText(document.getElementById('customRecipe'+slot).value);
+  if(!items.length){
+    alert("Couldn't parse any ingredients. Use lines like \"paneer 120\" — one per line, from WholAmino's known ingredients.");
+    return;
+  }
+  if(unmatched.length){
+    const proceed = confirm(`These lines weren't recognized and will be left OUT of the score, so the result may be incomplete:\n\n${unmatched.join('\n')}\n\nContinue anyway?`);
+    if(!proceed) return;
+  }
+  const r = computeScoreFromGrams(items);
+  if(!r) return;
+  const tier = tierForScore(r.score);
+  const entry = { name, ...r, tier, time: new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), mealSlot: slot };
+  state.pendingResult = entry;
+  showResult(entry, false);
+  goTab('result');
+
+  // Remember this recipe for next time, so typing the same dish name later finds it
+  // instead of requiring the ingredient list again.
+  const recipeTuples = items.map(it => [it.source, it.grams]);
+  const alreadySaved = state.myDishes.some(d => d.name.toLowerCase() === name.toLowerCase());
+  if(!alreadySaved){
+    state.myDishes.push({ name, recipe: recipeTuples });
+    syncMyDishInsert(name, recipeTuples).then(id => {
+      if(id){
+        const saved = state.myDishes.find(d => d.name === name && !d.id);
+        if(saved) saved.id = id;
+      }
+    });
+  }
+}
+
+function renderNextMealBanner(){
+  const el = document.getElementById('nextMealBanner');
+  if(!el) return;
+  const targets = computeTargets();
+  const proteinSum = +state.todayMeals.reduce((s,m)=>s+m.usableG,0).toFixed(1);
+  const fiberSum = +(state.todayMeals.reduce((s,m)=>s+(m.fiberG||0),0) + state.fiberLogged).toFixed(1);
+  const proteinRemaining = Math.max(0, +(targets.protein - proteinSum).toFixed(1));
+  const fiberRemaining = Math.max(0, +(targets.fiber - fiberSum).toFixed(1));
+
+  const slots = ["Breakfast","Lunch","Dinner"];
+  const loggedSlots = new Set(state.todayMeals.map(m=>m.mealSlot));
+  const remainingSlots = slots.filter(s => !loggedSlots.has(s));
+
+  if(remainingSlots.length === 0){
+    // All 3 meal slots logged for today — this is the moment for a real
+    // reflection, not just a flat pass/fail line.
+    const proteinOk = proteinRemaining <= 0;
+    const fiberOk = fiberRemaining <= 0;
+
+    if(proteinOk && fiberOk){
+      const COMPLETE_MESSAGES = {
+        HOME: `Today gave your body what it needs for muscle maintenance and steady digestion on a sedentary day — the real benefit isn't today specifically, it's doing this consistently.`,
+        GYM: `Today's protein and fiber support whatever you're actually training for right now — the real benefit isn't today specifically, it's stacking days like this one.`,
+        SPORTS: `Today gave your body what it needs to actually adapt from training, not just survive it — the real benefit isn't today specifically, it's consistency through the training block.`,
+      };
+      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">Both protein and fiber targets hit.</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}</div></div>`;
+      return;
+    }
+
+    const GAP_MESSAGES = {
+      HOME: {
+        protein: `<strong>Protein — ${proteinRemaining}g short:</strong> Muscles need a steady protein supply to repair and rebuild — for a sedentary work life, protein is also what keeps you feeling full and helps maintain muscle mass over time, which matters more than people expect once you're past your 30s. One short day is normal; a repeated pattern, meal after meal, is what actually matters (Mamerow et al., 2014).`,
+        fiber: `<strong>Fiber — ${fiberRemaining}g short:</strong> Most Indian meals are carb-heavy by default — fiber is one of your biggest levers for slowing how fast that reaches your bloodstream as sugar, alongside the post-meal mobility habits already in this app. An occasional short day isn't a concern; a consistent pattern is linked to poorer blood sugar control and gut health over time.`,
+      },
+      GYM: {
+        protein: `<strong>Protein — ${proteinRemaining}g short:</strong> Muscle protein synthesis needs a steady, threshold amount of protein to activate — this is directly tied to whatever you're training for right now, whether that's building muscle or holding onto it while losing fat. One short day won't undo progress; a repeated pattern will blunt it (Mamerow et al., 2014).`,
+        fiber: `<strong>Fiber — ${fiberRemaining}g short:</strong> Fiber slows digestion and helps you actually feel full — genuinely useful if fat loss or appetite control is part of why you're tracking. It also feeds your gut bacteria, which matters for general health regardless of training goal. One short day isn't a concern; a pattern is.`,
+      },
+      SPORTS: {
+        protein: `<strong>Protein — ${proteinRemaining}g short:</strong> Your muscles rebuild and adapt from training using the protein you actually eat — a gap here is exactly what limits how much of today's session actually turns into tomorrow's performance. One off day is normal and recoverable; a repeated pattern during a training block is what actually costs you (Mamerow et al., 2014).`,
+        fiber: `<strong>Fiber — ${fiberRemaining}g short:</strong> Fiber supports gut health, which affects how well you absorb the nutrients from everything else you're eating — not directly performance-limiting the way protein is, but part of the same system. One short day isn't a concern; a consistent pattern is.`,
+      },
+    };
+    const seg = GAP_MESSAGES[state.segment] || GAP_MESSAGES.HOME;
+    const parts = [];
+    if(!proteinOk) parts.push(seg.protein);
+    if(!fiberOk) parts.push(seg.fiber);
+    el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — GAP LOGGED</div><div class="nextmeal-title">All 3 meals logged, target${parts.length>1?'s':''} not fully met.</div><div class="nextmeal-target">${parts.join('<br><br>')}</div></div>`;
+    return;
+  }
+
+  const nextSlot = remainingSlots[0];
+  const targetForNextMeal = Math.round(proteinRemaining / remainingSlots.length);
+
+  // Real dishes whose actual computed usable protein is closest to what's needed —
+  // not a generic tip, an actual pick from the library.
+  const scored = DISHES.map(([name, recipe]) => {
+    const blend = recipe.map(([s,g])=>({source:s, grams:g}));
+    const r = computeScoreFromGrams(blend);
+    if(!r) return null;
+    return { name, recipe, usableG: r.usableG, score: r.score, diff: Math.abs(r.usableG - targetForNextMeal) };
+  }).filter(Boolean).sort((a,b) => a.diff - b.diff).slice(0,3);
+
+  el.innerHTML = `
+    <div class="nextmeal-banner">
+      <div class="nextmeal-eyebrow">NEXT UP — ${nextSlot.toUpperCase()}</div>
+      <div class="nextmeal-title">Aim for ~${targetForNextMeal}g usable protein at ${nextSlot.toLowerCase()}</div>
+      <div class="nextmeal-target">${proteinRemaining}g protein and ${fiberRemaining}g fiber still needed today, split across ${remainingSlots.length} remaining meal${remainingSlots.length>1?'s':''}</div>
+      ${scored.map(s => `<div class="nextmeal-suggestion" onclick='logMealToSlot(${JSON.stringify(s.name)}, ${JSON.stringify(s.recipe)}, ${JSON.stringify(nextSlot)})'><b>${s.name}</b><span>${s.usableG}g usable protein — tap to log for ${nextSlot}</span></div>`).join('')}
+    </div>
+  `;
+}
+
+async function renderProgress(){
+  const el = document.getElementById('progressBody');
+  if(!sb || !currentUser){
+    el.innerHTML = '<div class="empty-note">Progress tracking needs a real account so history can be saved across days. Sign in to start tracking.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="empty-note">Loading…</div>';
+  const meals = await loadProgressData();
+  if(meals === null){
+    el.innerHTML = '<div class="empty-note">Could not load progress data. Try again.</div>';
+    return;
+  }
+  const targets = computeTargets(); // uses today's target as an approximation across the whole window
+
+  const byDay = {};
+  meals.forEach(m => {
+    const dateStr = new Date(m.logged_at).toISOString().slice(0,10);
+    if(!byDay[dateStr]) byDay[dateStr] = { protein: 0, fiber: 0 };
+    byDay[dateStr].protein += m.usable_g || 0;
+    byDay[dateStr].fiber += m.fiber_g || 0;
+  });
+
+  const days = [];
+  for(let i=29;i>=0;i--){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0,10);
+    const data = byDay[dateStr];
+    days.push({
+      dateStr,
+      logged: !!data,
+      proteinHit: data ? data.protein >= targets.protein : false,
+      protein: data ? +data.protein.toFixed(1) : 0,
+    });
+  }
+
+  const daysHit = days.filter(d => d.proteinHit).length;
+  const daysLogged = days.filter(d => d.logged).length;
+  let streak = 0;
+  for(let i=days.length-1; i>=0; i--){
+    if(days[i].proteinHit) streak++; else break;
+  }
+  const avgProtein = daysLogged ? (days.reduce((s,d)=>s+d.protein,0) / daysLogged).toFixed(1) : '0';
+
+  el.innerHTML = `
+    <div class="week-stats">
+      <div class="week-stat"><b style="color:var(--usable);">${daysHit}</b><span>DAYS HIT TARGET</span></div>
+      <div class="week-stat"><b style="color:var(--warn);">${streak}</b><span>DAY STREAK</span></div>
+      <div class="week-stat"><b>${avgProtein}g</b><span>AVG PROTEIN/DAY</span></div>
+    </div>
+    <div class="conf-note" style="margin-bottom:14px;">Compared against your CURRENT target (${targets.protein}g/day). If your weight or training phase changed during this window, earlier days are still shown against today's target, not what applied at the time.</div>
+    <div class="section-lbl">DAY BY DAY</div>
+    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:8px;">
+      ${days.map(d => `<div title="${d.dateStr}: ${d.protein}g" style="aspect-ratio:1;background:${d.proteinHit?'var(--usable)':d.logged?'var(--warn)':'#EDECE6'};"></div>`).join('')}
+    </div>
+    <div class="conf-note">Green = hit target · Amber = logged, below target · Gray = not logged</div>
+  `;
+
+  // Full target-vs-actual charts for all 4 metrics. Protein/fiber can show
+  // history immediately (reconstructed above from logged_meals); fluid/sleep
+  // only exist from the daily_metrics snapshot forward — see the note below
+  // if those look sparse at first.
+  const dailyMetrics = await loadDailyMetrics();
+  const proteinChartData = days.filter(d=>d.logged).map(d => ({ date: d.dateStr, actual: d.protein, target: targets.protein }));
+  const fiberChartData = days.filter(d=>d.logged).map(d => {
+    const dm = dailyMetrics.find(m=>m.date===d.dateStr);
+    return { date: d.dateStr, actual: dm ? dm.fiber_g : (byDay[d.dateStr] ? byDay[d.dateStr].fiber : 0), target: targets.fiber };
+  });
+  const fluidChartData = dailyMetrics.filter(d=>d.fluid_l>0 || d.fluid_target).map(d => ({ date: d.date, actual: d.fluid_l, target: d.fluid_target }));
+  const sleepChartData = dailyMetrics.filter(d=>d.sleep_h>0 || d.sleep_target).map(d => ({ date: d.date, actual: d.sleep_h, target: d.sleep_target }));
+
+  el.innerHTML += `
+    <div class="section-lbl" style="margin-top:18px;">TARGET VS ACTUAL — LAST 30 DAYS</div>
+    ${renderMetricChartSVG(proteinChartData, 'Protein', 'g', 0)}
+    ${renderMetricChartSVG(fiberChartData, 'Fiber', 'g', 0)}
+    ${state.segment !== 'HOME' ? renderMetricChartSVG(fluidChartData, 'Hydration', 'L', 1) : ''}
+    ${state.segment !== 'HOME' ? renderMetricChartSVG(sleepChartData, 'Sleep', 'h', 1) : ''}
+    ${fluidChartData.length < 3 && state.segment !== 'HOME' ? '<div class="conf-note">Hydration and sleep history only started recording recently — this fills in day by day as you keep using the app.</div>' : ''}
+  `;
+}
+
+function renderMetricChartSVG(data, label, unit, decimals){
+  if(!data.length){
+    return `<div class="section-lbl">${label.toUpperCase()}</div><div class="conf-note" style="margin-bottom:14px;">No history yet — this starts building from today onward.</div>`;
+  }
+  const chartW = 320, chartH = 80, barGap = 2;
+  const maxVal = Math.max(...data.map(d => Math.max(d.actual, d.target||0))) * 1.15 || 1;
+  const barW = Math.max(3, (chartW - (data.length-1)*barGap) / data.length);
+  const bars = data.map((d,i) => {
+    const x = i * (barW + barGap);
+    const barH = Math.max(1, (d.actual / maxVal) * chartH);
+    const hit = d.target ? d.actual >= d.target : false;
+    return `<rect x="${x.toFixed(1)}" y="${(chartH - barH).toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${hit ? 'var(--usable)' : 'var(--warn)'}"><title>${d.date}: ${d.actual.toFixed(decimals)}${unit} (target ${d.target ? d.target.toFixed(decimals) : '?'}${unit})</title></rect>`;
+  }).join('');
+  const targetsPresent = data.filter(d=>d.target);
+  const avgTarget = targetsPresent.length ? targetsPresent.reduce((s,d)=>s+d.target,0) / targetsPresent.length : 0;
+  const targetY = chartH - (avgTarget / maxVal) * chartH;
+  const targetLine = avgTarget ? `<line x1="0" y1="${targetY.toFixed(1)}" x2="${chartW}" y2="${targetY.toFixed(1)}" stroke="#5B6FA8" stroke-width="1.5" stroke-dasharray="4,3"/>` : '';
+  return `
+    <div class="section-lbl">${label.toUpperCase()}</div>
+    <svg viewBox="0 0 ${chartW} ${chartH}" style="width:100%;height:64px;display:block;margin-bottom:4px;">
+      ${bars}${targetLine}
+    </svg>
+    <div class="conf-note" style="margin-bottom:14px;">Dashed line = target${avgTarget ? ` (~${avgTarget.toFixed(decimals)}${unit})` : ''} \u00b7 Green = hit \u00b7 Amber = below</div>
+  `;
+}
+
+function renderMealSlotSections(){
+  const targets = computeTargets();
+  const proteinPerSlot = targets.protein / 3;
+  const fiberPerSlot = targets.fiber / 3;
+  const slots = ["Breakfast","Lunch","Dinner"];
+  const currentSlot = inferMealSlot();
+  const currentIdx = slots.indexOf(currentSlot);
+
+  document.getElementById('mealSlotSections').innerHTML = slots.map((slot, idx) => {
+    const mealsInSlot = state.todayMeals.filter(m => m.mealSlot === slot);
+    const proteinActual = +mealsInSlot.reduce((s,m)=>s+m.usableG,0).toFixed(1);
+    const fiberActual = +mealsInSlot.reduce((s,m)=>s+(m.fiberG||0),0).toFixed(1);
+    const proteinPct = Math.min(100, proteinActual/proteinPerSlot*100);
+    const fiberPct = Math.min(100, fiberActual/fiberPerSlot*100);
+
+    let statusLabel, statusBg, statusFg;
+    if(idx > currentIdx){
+      statusLabel = "UPCOMING"; statusBg = "#EDECE6"; statusFg = "var(--ink-soft)";
+    } else if(proteinActual >= proteinPerSlot){
+      statusLabel = "ON TRACK"; statusBg = "var(--usable-bg)"; statusFg = "var(--usable)";
+    } else if(mealsInSlot.length > 0){
+      statusLabel = "LOGGED — BELOW TARGET"; statusBg = "var(--warn-bg)"; statusFg = "var(--warn)";
+    } else {
+      statusLabel = "NOT LOGGED YET"; statusBg = "#EDECE6"; statusFg = "var(--ink-soft)";
+    }
+
+    const mealRows = mealsInSlot.map(m => {
+      const mJson = JSON.stringify(m).replace(/"/g,'&quot;');
+      return `<div class="activity-row" onclick="showResult(${mJson}, true); goTab('result');"><div class="activity-name">${m.name}</div><div class="mini-badge ${tierClass(m.tier)}">${m.score}</div></div>`;
+    }).join('');
+
+    return `<div class="mealslot-card">
+      <div class="mealslot-head"><div class="mealslot-name">${slot}</div><div class="mealslot-status" style="background:${statusBg};color:${statusFg};">${statusLabel}</div></div>
+      <div class="mealslot-row">
+        <div class="mealslot-toprow"><span>PROTEIN</span><span>${proteinActual}g of ${proteinPerSlot.toFixed(0)}g</span></div>
+        <div class="mealslot-track"><div class="mealslot-fill" style="width:${proteinPct}%;background:var(--claimed);"></div></div>
+      </div>
+      <div class="mealslot-row">
+        <div class="mealslot-toprow"><span>FIBER</span><span>${fiberActual}g of ${fiberPerSlot.toFixed(0)}g</span></div>
+        <div class="mealslot-track"><div class="mealslot-fill" style="width:${fiberPct}%;background:var(--warn);"></div></div>
+      </div>
+      ${mealRows ? `<div style="margin-top:8px;">${mealRows}</div>` : ''}
+      <div class="chip-row" style="margin-top:10px;">
+        ${DISHES.slice(0,4).map(([name,recipe]) => `<div class="chip" onclick='logMealToSlot(${JSON.stringify(name)}, ${JSON.stringify(recipe)}, ${JSON.stringify(slot)})'>${name}</div>`).join('')}
+      </div>
+      <div class="log-box" style="margin-top:10px;padding:8px;">
+        <input type="text" id="mealInput${slot}" placeholder="What did you eat for ${slot.toLowerCase()}?">
+        <button class="log-send" style="margin-top:6px;" onclick="logFromTextSlot('${slot}')">LOG ${slot.toUpperCase()} →</button>
+      </div>
+      <div style="text-align:center;margin-top:8px;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="toggleCustomEntry('${slot}')">Not in the list? Enter ingredients manually</span>
+      </div>
+      <div id="customEntry${slot}" style="display:none;margin-top:10px;">
+        <div class="log-box" style="padding:8px;">
+          <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);">DISH NAME</label>
+          <input type="text" id="customName${slot}" placeholder="e.g. Amma's mixed veg poriyal" style="margin-bottom:6px;">
+          <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);">INGREDIENTS — one per line, e.g. "paneer 120"</label>
+          <textarea id="customRecipe${slot}" rows="3" style="width:100%;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:11px;background:transparent;resize:vertical;" placeholder="rice 150
+toor 120
+veg 80"></textarea>
+          <button class="log-send" style="margin-top:6px;" onclick="logCustomToSlot('${slot}')">LOG CUSTOM ENTRY →</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory(){
+  const complete = state.todayMeals.filter(m=>m.tier==='COMPLETE').length;
+  const strong = state.todayMeals.filter(m=>m.tier==='STRONG').length;
+  const gap = state.todayMeals.filter(m=>m.tier==='GOOD — ONE ADDITION AWAY').length;
+  document.getElementById('countComplete').textContent = complete;
+  document.getElementById('countStrong').textContent = strong;
+  document.getElementById('countGap').textContent = gap;
+}
+
+function renderMenu(){
+  const menu = state.restaurantMenu;
+  const complete = menu.filter(m=>m.tier==='COMPLETE').length;
+  const strong = menu.filter(m=>m.tier==='STRONG').length;
+  const gap = menu.filter(m=>m.tier==='GOOD — ONE ADDITION AWAY').length;
+  document.getElementById('menuCountComplete').textContent = complete;
+  document.getElementById('menuCountStrong').textContent = strong;
+  document.getElementById('menuCountGap').textContent = gap;
+  document.getElementById('menuCount').textContent = menu.length;
+  document.getElementById('menuList').innerHTML = menu.length ? menu.slice().reverse().map((m,revIdx)=>{
+    const idx = menu.length - 1 - revIdx;
+    return `<div class="activity-row" onclick="showResult(${JSON.stringify(m).replace(/"/g,'&quot;')}, true); goTab('result');">
+      <div><div class="activity-name">${m.name}</div><div class="activity-time">${m.claimedG}g claimed \u00b7 ${m.usableG}g usable</div></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="mini-badge ${tierClass(m.tier)}">${m.score}</div>
+        <span onclick="event.stopPropagation(); removeMenuItem(${idx});" style="color:var(--claimed);font-family:'IBM Plex Mono',monospace;font-size:14px;">✕</span>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-note">No dishes audited yet. Tap "Audit a dish" to start.</div>';
+}
+function removeMenuItem(idx){
+  const removed = state.restaurantMenu[idx];
+  state.restaurantMenu.splice(idx,1);
+  renderMenu();
+  if(removed && removed.id) syncMenuDelete(removed.id);
+}
+
+function renderReports(){
+  const menu = state.restaurantMenu;
+  const complete = menu.filter(m=>m.tier==='COMPLETE').length;
+  const strong = menu.filter(m=>m.tier==='STRONG').length;
+  const gap = menu.filter(m=>m.tier==='GOOD — ONE ADDITION AWAY').length;
+  const rp = state.restaurantProfile;
+  document.getElementById('reportsSummary').innerHTML = `
+    <div class="h">${rp.name}${rp.location ? ' \u2014 '+rp.location : ''}</div>
+    <p>${menu.length} dishes audited. ${complete} Complete, ${strong} Strong, ${gap} need one addition.</p>
+  `;
+  document.getElementById('reportsList').innerHTML = menu.length ? menu.slice().reverse().map(m=>`
+    <div class="activity-row">
+      <div><div class="activity-name">${m.name}</div><div class="activity-time">Limiting: ${m.limitingAALabel}</div></div>
+      <div class="mini-badge ${tierClass(m.tier)}">${m.score}</div>
+    </div>`).join('') : '<div class="empty-note">No dishes audited yet.</div>';
+}
+function copySummary(){
+  const menu = state.restaurantMenu;
+  const rp = state.restaurantProfile;
+  let text = `WholAmino Menu Audit \u2014 ${rp.name}\n${rp.location||''}\n\n`;
+  menu.forEach(m=>{
+    text += `${m.name}: ${m.claimedG}g claimed, ${m.usableG}g usable, score ${m.score} (${m.tier}), limiting: ${m.limitingAALabel}\n`;
+  });
+  text += `\n${menu.filter(m=>m.tier==='COMPLETE').length} Complete \u00b7 ${menu.filter(m=>m.tier==='STRONG').length} Strong \u00b7 ${menu.filter(m=>m.tier==='GOOD — ONE ADDITION AWAY').length} need one addition`;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>alert('Summary copied to clipboard.')).catch(()=>alert(text));
+  } else {
+    alert(text);
+  }
+}
+
+function onRestaurantProfileChange(){
+  state.restaurantProfile.name = document.getElementById('restNameInput').value || 'My Restaurant';
+  state.restaurantProfile.cuisine = document.getElementById('restCuisineInput').value;
+  state.restaurantProfile.location = document.getElementById('restLocationInput').value;
+  state.restaurantProfile.contact = document.getElementById('restContactInput').value;
+  syncProfile();
+}
+
+function resetMenu(){
+  if(confirm("Clear all audited dishes from the menu? This can't be undone.")){
+    state.restaurantMenu = [];
+    render();
+    goTab('menu');
+    syncMenuClear();
+  }
+}
+
+function render(){
+  const targets = computeTargets();
+  const proteinSum = +state.todayMeals.reduce((s,m)=>s+m.usableG,0).toFixed(1);
+  const fiberSum = +(state.todayMeals.reduce((s,m)=>s+(m.fiberG||0),0) + state.fiberLogged).toFixed(1);
+  document.getElementById('signOutRow').style.display = currentUser ? 'block' : 'none';
+  document.getElementById('skipAccountRestaurant').style.display = state.segment === 'RESTAURANT' ? 'block' : 'none';
+  document.getElementById('skipAccountDefault').style.display = state.segment === 'RESTAURANT' ? 'none' : 'block';
+
+  const tier = getCurrentTier();
+  const logsRemaining = Math.max(0, FREE_LOG_LIMIT - state.totalLogsUsed);
+  const daysRemaining = Math.max(0, Math.ceil(FREE_TRIAL_DAYS - daysSinceSignup()));
+  const tierRow = tier !== 'start' ? currentSubscriptions.find(s => s.plan_type === tier) : null;
+  document.getElementById('premiumStatusLabel').textContent = tier === 'start'
+    ? `START — ${logsRemaining} of ${FREE_LOG_LIMIT} logs, ${daysRemaining} day${daysRemaining===1?'':'s'} left`
+    : tier.toUpperCase() + ' — active';
+  document.getElementById('premiumStatusBadge').textContent = (tierRow && tierRow.current_period_end)
+    ? 'until ' + new Date(tierRow.current_period_end).toLocaleDateString()
+    : '';
+  document.getElementById('programCards').style.display = tier === 'start' ? 'block' : 'none';
+  renderReadyReports();
+  renderExpiryWarning();
+
+  const hasReport = hasRestaurantReport();
+  document.getElementById('restaurantPaidLabel').textContent = hasReport ? 'Full PDF report — purchased' : 'Full formatted PDF report';
+  document.getElementById('restaurantPaidBadge').textContent = hasReport ? '✓' : '';
+  document.getElementById('buyReportBtn').style.display = hasReport ? 'none' : 'block';
+  document.getElementById('signOutRowR').style.display = currentUser ? 'block' : 'none';
+
+  ['SPORTS','GYM','HOME'].forEach(s=>{
+    const homeBtn = document.getElementById('segBtnHome-'+s);
+    const menuBtn = document.getElementById('segBtnMenu-'+s);
+    if(homeBtn) homeBtn.classList.toggle('active', s === state.segment);
+    if(menuBtn) menuBtn.classList.toggle('active', s === state.segment);
+  });
+  document.getElementById('segBtnHome-RESTAURANT').classList.toggle('active', state.segment === 'RESTAURANT');
+  document.getElementById('segBtnMenu-RESTAURANT').classList.toggle('active', state.segment === 'RESTAURANT');
+  // Once someone has committed to a personal segment via onboarding, only
+  // that segment remains visible — Restaurant is a separate B2B track with
+  // no overlap for a personal user, so it's hidden too once locked in.
+  // Deliberately switching later goes through Settings' "Reset my profile",
+  // not a casual always-visible switcher.
+  const isLocked = state.onboarded.SPORTS || state.onboarded.GYM || state.onboarded.HOME;
+  ['SPORTS','GYM','HOME'].forEach(s=>{
+    const showThis = !isLocked || s === state.segment;
+    const homeBtn = document.getElementById('segBtnHome-'+s);
+    const menuBtn = document.getElementById('segBtnMenu-'+s);
+    if(homeBtn) homeBtn.style.display = showThis ? 'block' : 'none';
+    if(menuBtn) menuBtn.style.display = showThis ? 'block' : 'none';
+  });
+  const showRestaurant = !isLocked || state.segment === 'RESTAURANT';
+  document.getElementById('segBtnHome-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
+  document.getElementById('segBtnMenu-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
+  document.getElementById('proteinVal').textContent = proteinSum;
+  document.getElementById('proteinTarget').textContent = targets.protein;
+  document.getElementById('proteinBar').style.width = Math.min(100, proteinSum/targets.protein*100)+'%';
+  document.getElementById('proteinBar').style.background = proteinSum>=targets.protein ? 'var(--usable)' : 'var(--claimed)';
+
+  document.getElementById('fiberVal').textContent = fiberSum;
+  document.getElementById('fiberTarget').textContent = targets.fiber;
+  document.getElementById('fiberBar').style.width = Math.min(100, fiberSum/targets.fiber*100)+'%';
+
+  document.getElementById('fluidVal').textContent = state.fluidLogged.toFixed(1);
+  document.getElementById('fluidTarget').textContent = targets.fluid;
+  document.getElementById('fluidBar').style.width = Math.min(100, state.fluidLogged/targets.fluid*100)+'%';
+  document.getElementById('fluidBar').style.background = 'var(--usable)';
+
+  document.getElementById('sleepVal').textContent = state.sleepLogged.toFixed(1);
+  document.getElementById('sleepTarget').textContent = targets.sleep;
+  document.getElementById('sleepBar').style.width = Math.min(100, state.sleepLogged/targets.sleep*100)+'%';
+
+  // Home Cooked gets a simpler dashboard — protein and fiber only. Fluid/sleep
+  // performance-tracking doesn't fit "is this a good family meal" the way it
+  // fits an athlete's training day, and showing 4 dense pillars to a home cook
+  // is exactly the kind of unnecessary complexity that erodes trust and use.
+  const isHomeSimple = state.segment === 'HOME';
+  document.getElementById('pillarFluid').style.display = isHomeSimple ? 'none' : 'block';
+  document.getElementById('pillarSleep').style.display = isHomeSimple ? 'none' : 'block';
+  document.getElementById('homeSimpleNote').style.display = isHomeSimple ? 'block' : 'none';
+  document.getElementById('switchToGymRow').style.display = state.segment === 'HOME' ? 'block' : 'none';
+
+  const showTraining = state.segment === 'SPORTS' || state.segment === 'GYM';
+  const trainingRow = document.getElementById('trainingRow');
+  trainingRow.style.display = showTraining ? 'flex' : 'none';
+  if(showTraining){
+    const btn = document.getElementById('trainingToggleBtn');
+    btn.textContent = state.trainingCompleted ? 'COMPLETED ✓' : 'NOT LOGGED';
+    btn.style.background = state.trainingCompleted ? 'var(--usable)' : 'var(--panel)';
+    btn.style.color = state.trainingCompleted ? '#fff' : 'var(--ink)';
+    btn.style.borderColor = state.trainingCompleted ? 'var(--usable)' : 'var(--ink)';
+  }
+
+  const tipEl = document.getElementById('presleepTip');
+  if((state.segment === 'SPORTS' || state.segment === 'GYM')){
+    tipEl.style.display = 'block';
+    tipEl.innerHTML = '<div class="h">BEFORE BED</div><p>~30-40g of a slow-digesting protein (curd, paneer, or casein) 30-60 min before sleep can support overnight muscle repair — amino acid availability is otherwise low during the fasted overnight period. Individual sleep needs vary; this is general guidance, not a fixed rule.</p>';
+  } else {
+    tipEl.style.display = 'none';
+  }
+
+  document.getElementById('todaySummary').innerHTML = state.todayMeals.length ? state.todayMeals.slice().reverse().map(m=>`
+    <div class="activity-row" onclick="showResult(${JSON.stringify(m).replace(/"/g,'&quot;')}, true); goTab('result');">
+      <div><div class="activity-name">${m.name}</div><div class="activity-time">${m.mealSlot ? m.mealSlot+' · ' : ''}${m.time}</div></div>
+      <div class="mini-badge ${tierClass(m.tier)}">${m.score}</div>
+    </div>`).join('') : '<div class="empty-note">Nothing logged yet — tap above to log your first meal.</div>';
+
+  document.getElementById('avatarLetter').textContent = (state.name||'A')[0].toUpperCase();
+  document.getElementById('nameInput').value = state.name || '';
+  document.getElementById('weightInput').value = state.weight;
+  document.getElementById('ageInput').value = state.age;
+  document.getElementById('phaseGeneral').classList.toggle('active', state.phase==='general');
+  document.getElementById('phaseCompetition').classList.toggle('active', state.phase==='competition');
+  document.getElementById('goalGeneral').classList.toggle('active', state.goal==='general');
+  document.getElementById('goalMuscle').classList.toggle('active', state.goal==='muscle');
+  document.getElementById('goalFatloss').classList.toggle('active', state.goal==='fatloss');
+
+  document.getElementById('phaseToggle').style.display = state.segment==='SPORTS' ? 'flex' : 'none';
+  document.getElementById('phaseSectionLbl').style.display = state.segment==='SPORTS' ? 'block' : 'none';
+  document.getElementById('goalToggle').style.display = state.segment==='GYM' ? 'flex' : 'none';
+  document.getElementById('trainingStyleSectionLbl').style.display = state.segment==='GYM' ? 'block' : 'none';
+  document.getElementById('trainingStyleChips').style.display = state.segment==='GYM' ? 'flex' : 'none';
+  if(state.segment==='GYM'){
+    const styleChip = (id, active) => { document.getElementById(id).style.background = active ? 'var(--ink)' : 'var(--panel)'; document.getElementById(id).style.color = active ? '#fff' : 'var(--ink-soft)'; };
+    styleChip('styleWeights', state.trainingStyle==='weights');
+    styleChip('stylePilates', state.trainingStyle==='pilates');
+    styleChip('styleYoga', state.trainingStyle==='yoga');
+    styleChip('styleCrossfit', state.trainingStyle==='crossfit');
+    styleChip('styleCardio', state.trainingStyle==='cardio');
+    styleChip('styleMixed', state.trainingStyle==='mixed');
+  }
+  document.getElementById('homeSegmentNote').style.display = (state.segment==='HOME'||state.segment==='RESTAURANT') ? 'block' : 'none';
+  document.getElementById('lifeStageSection').style.display = (state.segment==='HOME' && state.sex==='F') ? 'block' : 'none';
+
+  const sexStyle = (id, active) => { document.getElementById(id).style.background = active ? 'var(--ink)' : 'var(--panel)'; document.getElementById(id).style.color = active ? '#fff' : 'var(--ink-soft)'; };
+  sexStyle('sexF', state.sex==='F'); sexStyle('sexM', state.sex==='M');
+  sexStyle('lifeNone', state.lifeStage==='none'); sexStyle('lifePregnant', state.lifeStage==='pregnant'); sexStyle('lifeLactating', state.lifeStage==='lactating');
+
+  document.getElementById('targetBasisLabel').textContent = targets.label;
+  document.getElementById('targetProteinDisplay').textContent = targets.protein+'g';
+  document.getElementById('targetFiberDisplay').textContent = targets.fiber+'g';
+  document.getElementById('targetFluidDisplay').textContent = targets.fluid+'L';
+
+  // Same locking rule as the Home screen switcher: once committed to a
+  // personal segment, only that segment stays selectable here — Restaurant
+  // is hidden too, since it's a separate B2B track with no overlap for a
+  // personal user. These chips previously called setSegment() directly for
+  // all four options with zero gating — letting someone bypass the intended
+  // Settings → "Reset my profile" flow entirely, unlike the Home screen.
+  const visibleSegments = ['HOME','GYM','SPORTS'].filter(s => !isLocked || s === state.segment).concat(showRestaurant ? ['RESTAURANT'] : []);
+  document.getElementById('segmentChips').innerHTML = visibleSegments.map(s=>
+    `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${s}</div>`
+  ).join('');
+  document.getElementById('segmentChipsR').innerHTML = visibleSegments.map(s=>
+    `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${s}</div>`
+  ).join('');
+
+  const isRestaurant = state.segment === 'RESTAURANT';
+  document.getElementById('tabbarPersonal').style.display = isRestaurant ? 'none' : 'flex';
+  document.getElementById('tabbarRestaurant').style.display = isRestaurant ? 'flex' : 'none';
+
+  if(document.getElementById('screen-history').classList.contains('active')){ renderHistory(); renderMealSlotSections(); renderNextMealBanner(); }
+  if(document.getElementById('screen-menu').classList.contains('active')) renderMenu();
+  if(document.getElementById('screen-reports').classList.contains('active')) renderReports();
+}
+
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+}
+updateClock();
+setInterval(updateClock, 30000);
+render();
+checkAuthAndInit();
+</script>
+<div class="legal-overlay" id="legalOverlay">
+  <div class="legal-head">
+    <span class="legal-close" onclick="hideLegal()">←</span>
+    <span class="legal-title" id="legalTitle">About</span>
+  </div>
+  <div class="legal-body" id="legalBody"></div>
+</div>
+
+<script>
+const legalContent = {
+  about: {
+    title: 'About WholAmino',
+    body: `<h3>What WholAmino is</h3>
+<p>WholAmino is a nutrition and metabolic intelligence app. It tracks protein quantity and protein quality together — not just how much protein you eat, but how much of it your body can actually use — alongside fibre, hydration, sleep, training, and post-meal metabolic habits.</p>
+<h3>Who it's for</h3>
+<p>Athletes, gym-goers, working professionals eating home-cooked meals, and restaurants that want their menus independently audited for protein quality.</p>
+<h3>Who's behind it</h3>
+<p>WholAmino is a brand owned and operated by NaatiBru.</p>`
+  },
+  terms: {
+    title: 'Terms of Service',
+    body: `<h3>1. Using WholAmino</h3>
+<p>By using this app, you agree to these terms. WholAmino provides nutrition tracking and informational guidance — it is not a substitute for professional medical or dietary advice.</p>
+<h3>2. Subscriptions</h3>
+<p>Paid plans (Habit / Transform) unlock unlimited logging for the stated duration. Restaurant Menu Audit reports are a one-time purchase, not a subscription.</p>
+<h3>3. Accounts</h3>
+<p>You're responsible for keeping your login access secure and for the accuracy of the information you log.</p>`
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    body: `<h3>What we collect</h3>
+<p>Your profile details (name, weight, age, segment), the meals you log, and basic usage data needed to run the app and calculate your targets.</p>
+<h3>How it's used</h3>
+<p>Solely to power your nutrition tracking, targets, and history within the app. We do not sell your personal data.</p>
+<h3>Storage</h3>
+<p>Data is stored securely and is accessible only to your account.</p>`
+  },
+  refund: {
+    title: 'Refund & Cancellation',
+    body: `<h3>Subscriptions (Habit ₹299 / Transform ₹799)</h3>
+<p>Full refund if requested within 24 hours of purchase, provided fewer than 3 meals have been logged on the paid plan. Beyond that window, or beyond 3 logs, the subscription is non-refundable for the remaining period — you'll retain access until the plan's duration ends.</p>
+<h3>Restaurant Menu Audit report (₹499, one-time)</h3>
+<p>Full refund if requested before the audit report has been delivered. Once the report is delivered, the purchase is non-refundable.</p>
+<h3>How to request</h3>
+<p>Email us at the address on the Contact page with your registered mobile number/email and the reason for the request. Refunds are processed to the original payment method within 5-7 business days of approval.</p>`
+  },
+  contact: {
+    title: 'Contact',
+    body: `<h3>Get in touch</h3>
+<p>Email: platanoorganic6@gmail.com</p>
+<p>Mobile: +91 63629 98567</p>
+<p>Business: NaatiBru (sole owner of the WholAmino brand)</p>
+<p>Address: Sri Sai Enclave, Flat No. 14, 4th Cross, Navodaya Nagar, JP Nagar 7th Phase, Bengaluru 560076</p>`
+  }
+};
+function showLegal(key){
+  const c = legalContent[key];
+  if(!c) return;
+  document.getElementById('legalTitle').textContent = c.title;
+  document.getElementById('legalBody').innerHTML = c.body;
+  document.getElementById('legalOverlay').classList.add('show');
+}
+function hideLegal(){
+  document.getElementById('legalOverlay').classList.remove('show');
+}
+</script>
+
+</body>
+</html>
