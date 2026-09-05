@@ -27,7 +27,7 @@
   .display{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.02em;}
   .mono{font-family:'IBM Plex Mono',monospace;}
 
-  #app-shell{max-width:420px;margin:0 auto;height:100vh;background:var(--paper);display:none;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(0,0,0,0.15);}
+  #app-shell{max-width:420px;margin:0 auto;height:100vh;height:calc(var(--app-vh, 1vh) * 100);height:100dvh;background:var(--paper);display:none;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(0,0,0,0.15);}
   .statusbar{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 20px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--ink);flex-shrink:0;background:var(--paper);}
 
   .screen{flex:1;overflow-y:auto;padding:0 16px 16px;display:none;}
@@ -385,8 +385,19 @@
         <div class="landing-signup-segments">
           <button class="chip chip-restaurant" onclick="pickLandingSignupSegment('RESTAURANT')" id="landingSeg-RESTAURANT">Restaurant — Menu Audit</button>
         </div>
-        <div class="login-field" style="max-width:420px;margin:16px auto 0;">
-          <label>EMAIL</label>
+        <div style="max-width:420px;margin:18px auto 0;">
+          <button class="onboard-btn" onclick="signInWithGoogle()" id="googleSignInBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--rule);display:flex;align-items:center;justify-content:center;gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.92c1.7-1.57 2.68-3.88 2.68-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71a5.4 5.4 0 0 1-.28-1.71c0-.59.1-1.17.28-1.71V4.95H.96A8.997 8.997 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+            CONTINUE WITH GOOGLE
+          </button>
+        </div>
+        <div style="max-width:420px;margin:16px auto;display:flex;align-items:center;gap:10px;">
+          <div style="flex:1;height:1px;background:var(--rule);"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);">OR</span>
+          <div style="flex:1;height:1px;background:var(--rule);"></div>
+        </div>
+        <div class="login-field" style="max-width:420px;margin:0 auto;">
+          <label style="font-size:12px;font-weight:600;letter-spacing:0.04em;">EMAIL</label>
           <input type="email" id="landingEmail" placeholder="you@example.com">
         </div>
         <div style="max-width:420px;margin:0 auto;">
@@ -548,6 +559,10 @@
     <div class="section-lbl">SEGMENT</div>
     <div class="chip-row" id="segmentChips"></div>
 
+    <div class="section-lbl">DIET</div>
+    <div class="chip-row" id="dietChips"></div>
+    <div class="conf-note" id="dietNote" style="margin-bottom:14px;"></div>
+
     <div class="section-lbl" id="phaseSectionLbl">TRAINING PHASE</div>
     <div class="phase-toggle" id="phaseToggle">
       <div class="phase-opt" id="phaseGeneral" onclick="setPhase('general')">GENERAL</div>
@@ -577,6 +592,7 @@
     </div>
 
     <div class="section-lbl">SETTINGS</div>
+    <div class="settings-row" onclick="showFoodGuide()" style="cursor:pointer;"><span>Food &amp; Dish Guide</span><span class="chev">›</span></div>
     <div class="settings-row" onclick="showLegal(&apos;about&apos;)" style="cursor:pointer;"><span>About WholAmino</span><span class="chev">›</span></div>
     <div class="section-lbl">YOUR PROGRAM</div>
     <div id="premiumStatusCard" class="target-card">
@@ -710,6 +726,10 @@ yogurt 40"></textarea>
     <button class="tab" id="tabBtn-rprofile" onclick="goTab('rprofile')"><div class="tab-icon">●</div><span class="tab-lbl">PROFILE</span></button>
   </div>
 
+  <a href="https://wa.me/919019754079?text=Hi%2C%20I%20need%20help%20with%20WholAmino" target="_blank" rel="noopener" id="whatsappSupportBtn" style="display:flex;position:absolute;right:16px;bottom:82px;width:52px;height:52px;border-radius:50%;background:#25D366;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.28);z-index:50;text-decoration:none;">
+    <svg width="27" height="27" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.48 1.32 5L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.15 8.15 0 0 1-1.26-4.34c0-4.52 3.68-8.2 8.21-8.2 2.19 0 4.25.86 5.8 2.4a8.15 8.15 0 0 1 2.4 5.8c0 4.53-3.68 8.2-8.17 8.2Zm4.5-6.15c-.25-.12-1.47-.72-1.7-.8-.23-.09-.39-.12-.56.12-.16.25-.64.8-.78.96-.15.17-.29.19-.53.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.16.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.22.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.57.12.16 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28Z"/></svg>
+  </a>
+
   <div class="onboard-overlay" id="onboardOverlay">
     <div class="onboard-card">
       <div class="onboard-eyebrow" id="onboardEyebrow">FIRST TIME IN SPORTS MODE</div>
@@ -742,6 +762,21 @@ yogurt 40"></textarea>
 // Until these are filled in, the app runs exactly as before — local-only,
 // no login prompt, nothing breaks.
 // ============================================================================
+// Mobile browsers (especially iOS Safari) calculate 100vh against the
+// LARGEST possible viewport (address bar hidden), not the actually-visible
+// one — so whenever the address bar is showing, the real visible area is
+// shorter than 100vh, pushing the bottom tab bar below the fold until the
+// whole page is scrolled. This is worst right after onboarding closes the
+// keyboard, which is exactly when the browser recalculates viewport height.
+// Modern browsers get 100dvh (set in CSS, correct on its own); this JS
+// fallback covers older ones that don't support dvh at all.
+function setAppViewportHeight(){
+  document.documentElement.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px');
+}
+setAppViewportHeight();
+window.addEventListener('resize', setAppViewportHeight);
+window.addEventListener('orientationchange', setAppViewportHeight);
+
 const SUPABASE_URL = "https://xtkrltroefoafbtsfrtc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_XBhYZlGr0Zh13VjIbXP0fA_njeH-P0y";
 const SUPABASE_CONFIGURED = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
@@ -851,11 +886,21 @@ async function fetchPeriodMetrics(sub){
   };
 }
 
+// Shared by both the daily reflection banner and the PDF report — any place
+// recommending specific protein-dense foods needs to respect diet
+// preference, not just the dish-suggestion chips. Unset (null) shows the
+// full range, same as before this feature existed.
+function proteinFoodSuggestion(){
+  if(state.dietType === 'VEGAN') return 'extra dal, chana, tofu, soy, or a handful of peanuts';
+  if(state.dietType === 'VEG') return 'some paneer, extra dal, or a bit of yogurt';
+  return 'an egg, some paneer, extra dal, or chicken';
+}
+
 const INSIGHT_CONTENT = {
   protein: {
     label: 'Protein',
     impact: 'Consistently falling short on protein slows muscle repair and recovery, and makes it harder to hold onto lean mass — especially on training days.',
-    recommendation: 'Add a protein-dense food to your next meal (eggs, paneer, dal, chicken, curd, or a protein shake) rather than trying to fix it in one sitting — spreading it across meals works better than one large dose.',
+    recommendation: null, // computed at render time via proteinFoodSuggestion() — diet preference can change after this object is defined
   },
   fiber: {
     label: 'Fiber',
@@ -900,6 +945,22 @@ function generateReportPDF(sub, m){
   doc.setFontSize(15); doc.text(`${label} — Program Summary`, 20, y); y += 8;
   doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
   doc.text(`${state.name || 'User'}`, 20, y); y += 6;
+  // Profile context — without this, the recommendations below (which are
+  // segment- and diet-aware) would look disconnected from why they say what
+  // they say. E.g. a Vegan reader seeing "tofu, dal, chana" recommended
+  // needs to see their own diet preference stated to know that's deliberate,
+  // not generic.
+  const SEGMENT_DETAIL = {
+    SPORTS: state.phase === 'competition' ? 'Competition block' : 'General training',
+    GYM: { general: 'General fitness', muscle: 'Muscle gain', fatloss: 'Fat loss' }[state.goal] || null,
+    HOME: null,
+  };
+  const segmentLabel = { SPORTS: 'Sports', GYM: 'Gym', HOME: 'Working Professionals' }[state.segment] || state.segment;
+  const dietLabel = { VEGAN: 'Vegan', VEG: 'Vegetarian', NONVEG: 'Non-Vegetarian' }[state.dietType] || 'Not set';
+  const sexLabel = { F: 'Female', M: 'Male' }[state.sex] || state.sex;
+  const detail = SEGMENT_DETAIL[state.segment];
+  doc.text(`${segmentLabel}${detail ? ' — ' + detail : ''}  ·  Diet: ${dietLabel}`, 20, y); y += 6;
+  doc.text(`Age: ${state.age || '—'}  ·  Sex: ${sexLabel || '—'}  ·  Weight: ${state.weight || '—'}kg`, 20, y); y += 6;
   doc.text(`${m.periodStart.toLocaleDateString()} — ${m.periodEnd.toLocaleDateString()} (${m.totalDays} days)`, 20, y); y += 12;
 
   const row = (title, avgVal, target, unit) => {
@@ -922,7 +983,22 @@ function generateReportPDF(sub, m){
   const gaps = computeGaps(m);
   const ensureRoom = (needed) => { if(y + needed > 270){ doc.addPage(); y = 22; } };
 
-  if(gaps.length){
+  if(m.loggedDays === 0){
+    // Without this check, zero logged days meant every average (including
+    // the targets themselves) computed to 0, computeGaps() filters out any
+    // metric with target=0, gaps ended up empty, and the code below would
+    // have shown "genuinely solid consistency — keep it up" — the exact
+    // opposite of the truth, sitting right next to an honest "0 of 30 days"
+    // adherence line a few lines above it.
+    ensureRoom(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Key Focus', 20, y); y += 7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    const noDataLine = doc.splitTextToSize(
+      "No days were logged this period, so there's nothing to compare against a target yet. The best next step is simply starting — even a few logged days gives a real baseline to build from.",
+      pageWidth
+    );
+    doc.text(noDataLine, 20, y); y += noDataLine.length * 5 + 10;
+  } else if(gaps.length){
     ensureRoom(20);
     doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Key Focus', 20, y); y += 7;
     doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
@@ -938,6 +1014,9 @@ function generateReportPDF(sub, m){
 
     gaps.forEach(g => {
       const c = INSIGHT_CONTENT[g.key];
+      const recommendationText = g.key === 'protein'
+        ? `Add a protein-dense food to your next meal (${proteinFoodSuggestion()}, or a protein shake) rather than trying to fix it in one sitting — spreading it across meals works better than one large dose.`
+        : c.recommendation;
       ensureRoom(35);
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text(`${c.label} — ${g.pct}% of target`, 20, y); y += 6;
@@ -948,7 +1027,7 @@ function generateReportPDF(sub, m){
       doc.setTextColor(0);
       doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text('Try this:', 24, y); y += 5;
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const recLines = doc.splitTextToSize(c.recommendation, pageWidth - 4);
+      const recLines = doc.splitTextToSize(recommendationText, pageWidth - 4);
       doc.text(recLines, 24, y); y += recLines.length * 4.8 + 8;
     });
   } else {
@@ -1124,6 +1203,7 @@ async function loadUserData(){
       state.segment = profile.segment;
     }
     state.phase = profile.phase; state.goal = profile.goal; state.lifeStage = profile.life_stage; state.trainingStyle = profile.training_style || null;
+    state.dietType = profile.diet_type || null;
     state.onboarded = { SPORTS: profile.onboarded_sports, GYM: profile.onboarded_gym, HOME: profile.onboarded_home };
     state.restaurantProfile = { name: profile.restaurant_name, cuisine: profile.restaurant_cuisine, location: profile.restaurant_location, contact: profile.restaurant_contact };
     state.totalLogsUsed = profile.total_logs_used || 0; // lifetime count, never resets
@@ -1192,6 +1272,7 @@ async function syncProfile(){
   const { error } = await sb.from('profiles').update({
     name: state.name, weight: state.weight, age: state.age, sex: state.sex, segment: state.segment,
     phase: state.phase, goal: state.goal, life_stage: state.lifeStage, training_style: state.trainingStyle,
+    diet_type: state.dietType,
     onboarded_sports: state.onboarded.SPORTS, onboarded_gym: state.onboarded.GYM, onboarded_home: state.onboarded.HOME,
     fiber_logged: state.fiberLogged, fluid_logged: state.fluidLogged, sleep_logged: state.sleepLogged,
     training_completed: state.trainingCompleted,
@@ -1306,6 +1387,26 @@ function pickLandingSignupSegment(s){
   // is now selected" only exists if the person happens to scroll down and
   // notice on their own.
   document.querySelector('.landing-signup').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function signInWithGoogle(){
+  const errorEl = document.getElementById('landingError');
+  errorEl.classList.remove('show');
+  if(!landingSignupSegment){ errorEl.textContent = "Pick a mode above first."; errorEl.classList.add('show'); return; }
+  if(!sb){ errorEl.textContent = "Backend not configured yet."; errorEl.classList.add('show'); return; }
+  // Same segment-persistence approach already proven for magic links: the
+  // OAuth redirect leaves this page entirely (full navigation to Google and
+  // back), so the picked segment needs to survive via both the URL param
+  // and localStorage, exactly like sendMagicLink's flow already does.
+  localStorage.setItem('wholamino_pending_segment', landingSignupSegment);
+  state.segment = landingSignupSegment;
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '?segment=' + landingSignupSegment }
+  });
+  if(error){ errorEl.textContent = error.message; errorEl.classList.add('show'); }
+  // On success, signInWithOAuth navigates away to Google immediately —
+  // nothing more to do here, checkAuthAndInit() picks up the session on return.
 }
 
 async function landingContinue(){
@@ -1575,7 +1676,29 @@ const DISHES = [
   // to match a compound dish like "Dal Khichdi" instead — a completely
   // different dish with rice and moong mixed in, not what someone meant by
   // just "dal" on its own.
+  // Standalone single roti — without this, ANY mention of "roti" alone (not
+  // part of a named combo) would tokenize down to just the word "roti", and
+  // the only existing entry crossing the 50% match threshold was "3 Roti +
+  // Sabzi" — a completely different dish (three rotis plus a vegetable side)
+  // silently substituted for what was actually just one roti.
+  // Standalone versions of extremely common Indian meal words that were
+  // previously ONLY defined inside a combo name (e.g. "rice" only existed
+  // inside "Curd Rice"/"Sambar Rice"/"Rasam Rice"/"Rajma Rice"/"Chole Rice").
+  // Same bug as Roti/Curd above, just at scale — saying any of these words
+  // alone scored exactly 0.5 against whichever combo happened to be listed
+  // first, silently adding a second dish's worth of food that was never
+  // actually eaten.
+  ["Rice", [["rice",150]]],
+  ["Chicken", [["chicken",100]]],
+  ["Egg", [["egg",50]]],
+  ["Sambar", [["toor",80],["veg",50]]],
+  ["Roti", [["wheat",35]]],
   ["Dal", [["toor",150]]],
+  // Standalone curd — same gap as Roti above: "curd" alone was only ever
+  // defined inside "Curd Rice" (tokens: curd, rice), so saying just "curd"
+  // scored exactly 0.5 and silently matched the full combo, adding 180g of
+  // rice that was never actually eaten.
+  ["Curd", [["yogurt",100]]],
   ["Raita", [["yogurt",100],["veg",20]]],
   // Explicit entry so this can't be silently mismatched to "Veg Fried Rice" —
   // without this, "paneer fried rice" scores high enough on shared words
@@ -1642,13 +1765,19 @@ const DISHES = [
   ["Soya Curry + Chapati", [["soy",80],["wheat",80],["veg",100]]],
   ["Chicken Curry + Rice", [["chicken",150],["rice",160]]],
   ["Egg Bhurji + Roti", [["egg",100],["wheat",80],["veg",60]]],
+  // Tofu already existed as a verified nutrition source but had ZERO dishes
+  // using it — meaning Vegan users, who genuinely have fewer options than
+  // everyone else, weren't even getting the one clearly-good option this
+  // database already had the data for.
+  ["Tofu Bhurji + Roti", [["tofu",150],["wheat",80],["veg",60]]],
+  ["Tofu Curry + Rice", [["tofu",150],["rice",180],["veg",80]]],
   ["Moong Dal Chilla + Curd", [["moong",120],["veg",70],["yogurt",80]]],
 ];
 
 // ---- State ----
 let state = {
   segment: "SPORTS",
-  name: "Ananya",
+  name: "",
   weight: 65,
   age: 22,
   sex: "F",
@@ -1667,6 +1796,10 @@ let state = {
   myDishes: [],
   restaurantProfile: { name: "My Restaurant", cuisine: "North Indian", location: "", contact: "" },
   onboarded: { SPORTS: false, GYM: false, HOME: false },
+  // null = not yet chosen — recommendations stay unfiltered until the user
+  // actively picks a diet preference, rather than surprise-filtering
+  // existing users the moment this feature ships.
+  dietType: null,
 };
 
 function computeTargets(){
@@ -1972,9 +2105,45 @@ function setPhase(p){ state.phase = p; render(); syncProfile(); }
 function setGoal(g){ state.goal = g; render(); syncProfile(); }
 function setTrainingStyle(s){ state.trainingStyle = s; render(); syncProfile(); }
 function setSex(s){ state.sex = s; render(); syncProfile(); }
+
+// Diet-type classification, used to filter which dishes get RECOMMENDED to
+// the user (not to block searching/logging anything manually — someone
+// occasionally eating outside their stated preference, or logging for
+// someone else, should still be able to). Classified by which ingredient
+// sources a dish actually uses, not by dish name.
+const ANIMAL_SOURCES = new Set(['egg','chicken','fish','mutton','prawns']);
+const DAIRY_SOURCES = new Set(['whey','casein','paneer','cheese','yogurt','parmesan']);
+
+function dishDietType(recipe){
+  const sources = recipe.map(([s]) => s);
+  if(sources.some(s => ANIMAL_SOURCES.has(s))) return 'NONVEG';
+  if(sources.some(s => DAIRY_SOURCES.has(s))) return 'VEG';
+  return 'VEGAN';
+}
+
+function dietAllows(recipe){
+  // No preference set yet — show everything, same as before this feature existed.
+  if(!state.dietType) return true;
+  const d = dishDietType(recipe);
+  if(state.dietType === 'VEGAN') return d === 'VEGAN';
+  if(state.dietType === 'VEG') return d !== 'NONVEG';
+  return true; // NONVEG — no restriction, sees all dishes
+}
+
+function setDietType(d){ state.dietType = d; render(); syncProfile(); }
+
+// These exist ONLY so multi-item sentences like "roti with pickle" resolve
+// correctly — nobody logs "Pickle" or "Chutney" as their actual breakfast.
+// Excluded from proactive suggestions; still fully searchable/loggable
+// directly if someone genuinely wants to.
+const SIDE_ONLY_DISHES = new Set(['Chutney','Papad','Pickle','Raita','Curd','Rice','Sambar','Roti','Dal','Chicken']);
+
+function isSuggestable(name, recipe){
+  return dietAllows(recipe) && !SIDE_ONLY_DISHES.has(name);
+}
 function setLifeStage(l){ state.lifeStage = l; render(); syncProfile(); }
 function onProfileChange(){
-  state.name = document.getElementById('nameInput').value || 'Athlete';
+  state.name = document.getElementById('nameInput').value;
   state.weight = Number(document.getElementById('weightInput').value) || 65;
   state.age = Number(document.getElementById('ageInput').value) || 25;
   render();
@@ -2142,6 +2311,7 @@ function goTab(tab){
                       progress:'screen-progress'};
   document.getElementById(screenMap[tab]).classList.add('active');
   if(document.getElementById('tabBtn-'+tab)) document.getElementById('tabBtn-'+tab).classList.add('active');
+  document.getElementById('whatsappSupportBtn').style.display = (tab === 'home') ? 'flex' : 'none';
   if(tab==='log') renderDishBrowser();
   if(tab==='history'){ renderHistory(); renderMealSlotSections(); renderNextMealBanner(); }
   if(tab==='menu') renderMenu();
@@ -2319,6 +2489,8 @@ function renderNextMealBanner(){
   const fiberSum = +(state.todayMeals.reduce((s,m)=>s+(m.fiberG||0),0) + state.fiberLogged).toFixed(1);
   const proteinRemaining = Math.max(0, +(targets.protein - proteinSum).toFixed(1));
   const fiberRemaining = Math.max(0, +(targets.fiber - fiberSum).toFixed(1));
+  const fluidRemaining = Math.max(0, +(targets.fluid - state.fluidLogged).toFixed(1));
+  const sleepRemaining = Math.max(0, +(targets.sleep - state.sleepLogged).toFixed(1));
 
   const slots = ["Breakfast","Lunch","Dinner"];
   const loggedSlots = new Set(state.todayMeals.map(m=>m.mealSlot));
@@ -2326,17 +2498,51 @@ function renderNextMealBanner(){
 
   if(remainingSlots.length === 0){
     // All 3 meal slots logged for today — this is the moment for a real
-    // reflection, not just a flat pass/fail line.
+    // reflection, not just a flat pass/fail line. Now covers all four
+    // tracked metrics (protein, fiber, hydration, sleep), not just the two
+    // that used to be checked here.
     const proteinOk = proteinRemaining <= 0;
     const fiberOk = fiberRemaining <= 0;
+    const fluidOk = fluidRemaining <= 0;
+    const sleepOk = sleepRemaining <= 0;
+    const allOk = proteinOk && fiberOk && fluidOk && sleepOk;
 
-    if(proteinOk && fiberOk){
+    if(allOk){
       const COMPLETE_MESSAGES = {
         HOME: `Today gave your body what it needs for muscle maintenance and steady digestion on a sedentary day — the real benefit isn't today specifically, it's doing this consistently.`,
-        GYM: `Today's protein and fiber support whatever you're actually training for right now — the real benefit isn't today specifically, it's stacking days like this one.`,
+        GYM: `Today's protein, fiber, hydration, and sleep support whatever you're actually training for right now — the real benefit isn't today specifically, it's stacking days like this one.`,
         SPORTS: `Today gave your body what it needs to actually adapt from training, not just survive it — the real benefit isn't today specifically, it's consistency through the training block.`,
       };
-      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">Both protein and fiber targets hit.</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}</div></div>`;
+      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">Protein, fiber, hydration, and sleep all on target.</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}</div></div>`;
+      return;
+    }
+
+    // Days 1-3 of a brand-new account get a deliberately different voice —
+    // reassuring and forward-looking, focused on ONE clear fix for tomorrow,
+    // rather than a clinical list of every shortfall at once. The detailed
+    // per-metric breakdown (below) is still exactly right once someone's
+    // past the very first days and used to seeing their own numbers.
+    if(daysSinceSignup() <= FREE_TRIAL_DAYS){
+      const gaps = [
+        { key:'protein', ok:proteinOk, pct: targets.protein ? proteinRemaining/targets.protein : 0,
+          fix: `Add one protein-dense item to whichever meal felt lightest today — ${proteinFoodSuggestion()} works well.` },
+        { key:'fiber', ok:fiberOk, pct: targets.fiber ? fiberRemaining/targets.fiber : 0,
+          fix: "Add a vegetable side or a handful of salad to one meal tomorrow — small additions add up faster than you'd expect." },
+        { key:'hydration', ok:fluidOk, pct: targets.fluid ? fluidRemaining/targets.fluid : 0,
+          fix: "Keep a bottle within reach tomorrow and take a few sips after each meal — hydration is the easiest one to quietly under-do." },
+        { key:'sleep', ok:sleepOk, pct: targets.sleep ? sleepRemaining/targets.sleep : 0,
+          fix: "Try winding down just 30 minutes earlier tonight — even a small, consistent shift adds up over a few nights." },
+      ].filter(g => !g.ok).sort((a,b) => b.pct - a.pct);
+      const topGap = gaps[0];
+      el.innerHTML = `<div class="nextmeal-banner">
+        <div class="nextmeal-eyebrow">DAY ${daysSinceSignup()} — GETTING STARTED</div>
+        <div class="nextmeal-title">A gap here and there is completely normal right now.</div>
+        <div class="nextmeal-target">
+          You're still finding your baseline — that's the whole point of these first few days. I'm not here to judge today's numbers, just to help you close the gap.<br><br>
+          <strong>One thing to focus on tomorrow (${topGap.key}):</strong> ${topGap.fix}<br><br>
+          Stick with something like this for a couple of weeks and it genuinely starts showing up — HABIT and TRANSFORM track that trend for you automatically and send a full report so you can actually see the progress, not just guess at it.
+        </div>
+      </div>`;
       return;
     }
 
@@ -2344,20 +2550,28 @@ function renderNextMealBanner(){
       HOME: {
         protein: `<strong>Protein — ${proteinRemaining}g short:</strong> Muscles need a steady protein supply to repair and rebuild — for a sedentary work life, protein is also what keeps you feeling full and helps maintain muscle mass over time, which matters more than people expect once you're past your 30s. One short day is normal; a repeated pattern, meal after meal, is what actually matters (Mamerow et al., 2014).`,
         fiber: `<strong>Fiber — ${fiberRemaining}g short:</strong> Most Indian meals are carb-heavy by default — fiber is one of your biggest levers for slowing how fast that reaches your bloodstream as sugar, alongside the post-meal mobility habits already in this app. An occasional short day isn't a concern; a consistent pattern is linked to poorer blood sugar control and gut health over time.`,
+        hydration: `<strong>Hydration — ${fluidRemaining}L short:</strong> Even mild under-hydration can affect focus and energy through a desk-bound day. Easy to fix — a bottle within reach and a habit of drinking with each meal closes this gap fast.`,
+        sleep: `<strong>Sleep — ${sleepRemaining}h short:</strong> Sleep is when a lot of real recovery and appetite regulation happens — consistently cutting it short tends to show up as poorer food choices and lower energy the next day.`,
       },
       GYM: {
         protein: `<strong>Protein — ${proteinRemaining}g short:</strong> Muscle protein synthesis needs a steady, threshold amount of protein to activate — this is directly tied to whatever you're training for right now, whether that's building muscle or holding onto it while losing fat. One short day won't undo progress; a repeated pattern will blunt it (Mamerow et al., 2014).`,
         fiber: `<strong>Fiber — ${fiberRemaining}g short:</strong> Fiber slows digestion and helps you actually feel full — genuinely useful if fat loss or appetite control is part of why you're tracking. It also feeds your gut bacteria, which matters for general health regardless of training goal. One short day isn't a concern; a pattern is.`,
+        hydration: `<strong>Hydration — ${fluidRemaining}L short:</strong> Under-hydration measurably hurts training performance and recovery — often before you consciously feel thirsty. Worth closing this one deliberately, not just when convenient.`,
+        sleep: `<strong>Sleep — ${sleepRemaining}h short:</strong> This is when training actually turns into adaptation — cutting sleep short is one of the most common ways people undo otherwise-good training and nutrition.`,
       },
       SPORTS: {
         protein: `<strong>Protein — ${proteinRemaining}g short:</strong> Your muscles rebuild and adapt from training using the protein you actually eat — a gap here is exactly what limits how much of today's session actually turns into tomorrow's performance. One off day is normal and recoverable; a repeated pattern during a training block is what actually costs you (Mamerow et al., 2014).`,
         fiber: `<strong>Fiber — ${fiberRemaining}g short:</strong> Fiber supports gut health, which affects how well you absorb the nutrients from everything else you're eating — not directly performance-limiting the way protein is, but part of the same system. One short day isn't a concern; a consistent pattern is.`,
+        hydration: `<strong>Hydration — ${fluidRemaining}L short:</strong> Hydration status directly affects endurance, strength output, and recovery — this is one of the highest-leverage, easiest-to-fix gaps for an athlete specifically.`,
+        sleep: `<strong>Sleep — ${sleepRemaining}h short:</strong> Adaptation from training happens during recovery, and sleep is the biggest lever in that recovery — a consistent shortfall here quietly caps how much your training actually pays off.`,
       },
     };
     const seg = GAP_MESSAGES[state.segment] || GAP_MESSAGES.HOME;
     const parts = [];
     if(!proteinOk) parts.push(seg.protein);
     if(!fiberOk) parts.push(seg.fiber);
+    if(!fluidOk) parts.push(seg.hydration);
+    if(!sleepOk) parts.push(seg.sleep);
     el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — GAP LOGGED</div><div class="nextmeal-title">All 3 meals logged, target${parts.length>1?'s':''} not fully met.</div><div class="nextmeal-target">${parts.join('<br><br>')}</div></div>`;
     return;
   }
@@ -2367,7 +2581,7 @@ function renderNextMealBanner(){
 
   // Real dishes whose actual computed usable protein is closest to what's needed —
   // not a generic tip, an actual pick from the library.
-  const scored = DISHES.map(([name, recipe]) => {
+  const scored = DISHES.filter(([name, recipe]) => isSuggestable(name, recipe)).map(([name, recipe]) => {
     const blend = recipe.map(([s,g])=>({source:s, grams:g}));
     const r = computeScoreFromGrams(blend);
     if(!r) return null;
@@ -2522,6 +2736,22 @@ function renderMealSlotSections(){
       return `<div class="activity-row" onclick="showResult(${mJson}, true); goTab('result');"><div class="activity-name">${m.name}</div><div class="mini-badge ${tierClass(m.tier)}">${m.score}</div></div>`;
     }).join('');
 
+    // Suggestions here used to just be the first 4 dishes in the whole
+    // library, regardless of meal slot or how much protein/fiber this
+    // specific slot is actually still short — which is how "Pickle" ended
+    // up suggested for breakfast. Now it's scored against THIS slot's real
+    // remaining gap (already computed above as proteinActual/proteinPerSlot),
+    // filtered by diet preference, and excludes side/condiment-only entries
+    // — so what's shown is something that would genuinely help close today's
+    // actual shortfall, not an arbitrary static list.
+    const slotProteinGap = Math.max(0, proteinPerSlot - proteinActual);
+    const slotSuggestions = DISHES.filter(([name, recipe]) => isSuggestable(name, recipe)).map(([name, recipe]) => {
+      const blend = recipe.map(([s,g])=>({source:s, grams:g}));
+      const r = computeScoreFromGrams(blend);
+      if(!r) return null;
+      return { name, recipe, usableG: r.usableG, diff: Math.abs(r.usableG - slotProteinGap) };
+    }).filter(Boolean).sort((a,b) => a.diff - b.diff).slice(0,4);
+
     return `<div class="mealslot-card">
       <div class="mealslot-head"><div class="mealslot-name">${slot}</div><div class="mealslot-status" style="background:${statusBg};color:${statusFg};">${statusLabel}</div></div>
       <div class="mealslot-row">
@@ -2534,7 +2764,7 @@ function renderMealSlotSections(){
       </div>
       ${mealRows ? `<div style="margin-top:8px;">${mealRows}</div>` : ''}
       <div class="chip-row" style="margin-top:10px;">
-        ${DISHES.slice(0,4).map(([name,recipe]) => `<div class="chip" onclick='logMealToSlot(${JSON.stringify(name)}, ${JSON.stringify(recipe)}, ${JSON.stringify(slot)})'>${name}</div>`).join('')}
+        ${slotSuggestions.map(s => `<div class="chip" onclick='logMealToSlot(${JSON.stringify(s.name)}, ${JSON.stringify(s.recipe)}, ${JSON.stringify(slot)})'>${s.name}</div>`).join('')}
       </div>
       <div class="log-box" style="margin-top:10px;padding:8px;">
         <input type="text" id="mealInput${slot}" placeholder="What did you eat for ${slot.toLowerCase()}?">
@@ -2734,7 +2964,15 @@ function render(){
   const tipEl = document.getElementById('presleepTip');
   if((state.segment === 'SPORTS' || state.segment === 'GYM')){
     tipEl.style.display = 'block';
-    tipEl.innerHTML = '<div class="h">BEFORE BED</div><p>~30-40g of a slow-digesting protein (curd, paneer, or casein) 30-60 min before sleep can support overnight muscle repair — amino acid availability is otherwise low during the fasted overnight period. Individual sleep needs vary; this is general guidance, not a fixed rule.</p>';
+    const presleepOptions = {
+      VEGAN: 'soy protein or a mixed plant-protein source',
+      VEG: 'curd, paneer, or casein',
+      NONVEG: 'curd, paneer, casein, or a boiled egg',
+    };
+    // Unset defaults to the VEG-level option (dairy-inclusive) — matches what
+    // this tip always said before diet preference existed as a setting.
+    const presleepFood = presleepOptions[state.dietType] || presleepOptions.VEG;
+    tipEl.innerHTML = `<div class="h">BEFORE BED</div><p>~30-40g of a slow-digesting protein (${presleepFood}) 30-60 min before sleep can support overnight muscle repair — amino acid availability is otherwise low during the fasted overnight period. Individual sleep needs vary; this is general guidance, not a fixed rule.</p>`;
   } else {
     tipEl.style.display = 'none';
   }
@@ -2795,6 +3033,21 @@ function render(){
     `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${s}</div>`
   ).join('');
 
+  const DIET_OPTIONS = [
+    { key: 'VEGAN', label: 'VEGAN', note: 'Only plant-based food — no dairy, egg, meat, or fish shown in suggestions.' },
+    { key: 'VEG', label: 'VEG', note: 'Plant-based + dairy — no egg, meat, or fish shown in suggestions.' },
+    { key: 'NONVEG', label: 'NON-VEG', note: 'Everything — plant-based, dairy, and animal-source dishes all shown.' },
+  ];
+  const dietChipsEl = document.getElementById('dietChips');
+  if(dietChipsEl){
+    dietChipsEl.innerHTML = DIET_OPTIONS.map(o =>
+      `<div class="chip" style="${o.key===state.dietType?'background:var(--ink);color:#fff;':''}" onclick="setDietType('${o.key}')">${o.label}</div>`
+    ).join('');
+    const dietNoteEl = document.getElementById('dietNote');
+    const selected = DIET_OPTIONS.find(o => o.key === state.dietType);
+    dietNoteEl.textContent = selected ? selected.note : 'Not set — recommendations show all dishes until you pick one.';
+  }
+
   const isRestaurant = state.segment === 'RESTAURANT';
   document.getElementById('tabbarPersonal').style.display = isRestaurant ? 'none' : 'flex';
   document.getElementById('tabbarRestaurant').style.display = isRestaurant ? 'flex' : 'none';
@@ -2819,6 +3072,14 @@ checkAuthAndInit();
     <span class="legal-title" id="legalTitle">About</span>
   </div>
   <div class="legal-body" id="legalBody"></div>
+</div>
+
+<div class="legal-overlay" id="foodGuideOverlay">
+  <div class="legal-head">
+    <span class="legal-close" onclick="document.getElementById('foodGuideOverlay').classList.remove('show')">←</span>
+    <span class="legal-title">Food &amp; Dish Guide</span>
+  </div>
+  <div class="legal-body" id="foodGuideBody"></div>
 </div>
 
 <script>
@@ -2877,6 +3138,59 @@ function showLegal(key){
 }
 function hideLegal(){
   document.getElementById('legalOverlay').classList.remove('show');
+}
+
+function showFoodGuide(){
+  // Built entirely from the app's own real, already-verified nutrition data
+  // (SOURCES/DISHES) — not separately-written content that could drift out
+  // of sync. Respects the current diet preference live, same as the
+  // suggestion chips elsewhere in the app.
+  const dietNote = state.dietType
+    ? `Showing ${state.dietType === 'VEGAN' ? 'Vegan' : state.dietType === 'VEG' ? 'Veg' : 'Non-Veg'} options, based on your Profile setting.`
+    : `Showing all options — set a diet preference in Profile to filter this list.`;
+
+  const proteinSources = Object.entries(SOURCES)
+    .filter(([key]) => dietAllows([[key,100]]))
+    .sort((a,b) => b[1].protein_per_100g - a[1].protein_per_100g)
+    .slice(0,10);
+
+  const fiberSources = Object.entries(SOURCES)
+    .filter(([key]) => dietAllows([[key,100]]) && (SOURCES[key].fiber_per_100g||0) > 0)
+    .sort((a,b) => (b[1].fiber_per_100g||0) - (a[1].fiber_per_100g||0))
+    .slice(0,10);
+
+  const completeDishes = DISHES
+    .filter(([name, recipe]) => isSuggestable(name, recipe))
+    .map(([name, recipe]) => {
+      const blend = recipe.map(([s,g])=>({source:s, grams:g}));
+      const r = computeScoreFromGrams(blend);
+      if(!r) return null;
+      return { name, usableG: r.usableG, fiberG: r.fiberG, tier: tierForScore(r.score) };
+    })
+    .filter(d => d && d.tier !== 'GOOD — ONE ADDITION AWAY' && d.fiberG >= 5)
+    .sort((a,b) => (b.usableG + b.fiberG) - (a.usableG + a.fiberG))
+    .slice(0,8);
+
+  const listHTML = (items, render) => `<div style="margin-bottom:4px;">${items.map(render).join('')}</div>`;
+
+  document.getElementById('foodGuideBody').innerHTML = `
+    <p style="color:var(--ink-soft);font-size:11.5px;margin-bottom:4px;">${dietNote}</p>
+    <p style="color:var(--ink-soft);font-size:11.5px;margin-bottom:16px;">This is a reference for what to look for — whether you're cooking it yourself, someone at home is cooking, or you're ordering in.</p>
+    <h3>Protein-Rich Sources</h3>
+    <p style="margin-bottom:8px;">Highest protein content per 100g, from what this app actually tracks.</p>
+    ${listHTML(proteinSources, ([key, s]) => `<div class="settings-row" style="cursor:default;"><span>${s.name}</span><span class="chev" style="color:var(--usable);font-weight:700;">${s.protein_per_100g}g/100g</span></div>`)}
+
+    <h3>Fiber-Rich Sources</h3>
+    <p style="margin-bottom:8px;">Highest fiber content per 100g.</p>
+    ${listHTML(fiberSources, ([key, s]) => `<div class="settings-row" style="cursor:default;"><span>${s.name}</span><span class="chev" style="color:var(--warn);font-weight:700;">${s.fiber_per_100g}g/100g</span></div>`)}
+
+    <h3>Complete Meals — Protein + Fiber Together</h3>
+    <p style="margin-bottom:8px;">Dishes from the library that score well on BOTH usable protein and fiber in one go — genuinely well-rounded, not just protein-heavy.</p>
+    ${completeDishes.length ? listHTML(completeDishes, d => `<div class="settings-row" style="cursor:default;"><span>${d.name}</span><span class="chev" style="color:var(--ink);font-weight:700;font-size:11px;">${d.usableG}g protein · ${d.fiberG}g fiber</span></div>`) : '<p style="color:var(--ink-soft);">No dishes currently meet both bars for this diet preference — the library is still growing.</p>'}
+
+    <p style="color:var(--ink-soft);font-size:11px;margin-top:20px;"><em>Values are per the standard serving used in this app's dish library — your actual meal may differ. This list updates automatically as the food library grows.</em></p>
+  `;
+  document.getElementById('foodGuideOverlay').classList.add('show');
 }
 </script>
 
