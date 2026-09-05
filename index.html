@@ -430,15 +430,16 @@
   <!-- HOME -->
   <div class="screen active" id="screen-home">
     <div class="app-header">
-      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>WHOL<span>AMINO</span></div>
+      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>Whol<span>Amino</span></div>
     </div>
     <div class="segment-switcher" id="segmentSwitcherHome">
       <button class="segment-btn" id="segBtnHome-SPORTS" onclick="setSegment('SPORTS')">SPORTS</button>
       <button class="segment-btn" id="segBtnHome-GYM" onclick="setSegment('GYM')">GYM</button>
-      <button class="segment-btn" id="segBtnHome-HOME" onclick="setSegment('HOME')">HOME</button>
+      <button class="segment-btn" id="segBtnHome-HOME" onclick="setSegment('HOME')">WORK PROF</button>
       <button class="segment-btn" id="segBtnHome-RESTAURANT" onclick="setSegment('RESTAURANT')">RESTAURANT</button>
     </div>
     <div id="expiryWarningBanner" style="display:none;"></div>
+    <div id="homeGreeting" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;"></div>
 
     <div class="pillars">
       <div class="pillar">
@@ -473,17 +474,19 @@
         <div class="pillar-add"><input type="number" step="0.5" id="sleepInput" placeholder="hrs" style="width:100%;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;" oninput="setSleep(this.value)"></div>
       </div>
     </div>
+    <div id="nextMealBanner"></div>
+    <div id="homeProgressSummary"></div>
     <div id="homeSimpleNote" class="conf-note" style="display:none;margin-bottom:14px;">Tracking protein and fiber from what you cook. Fluid and sleep tracking are built for athletes and gym training — see Profile if that's becoming more relevant for you.</div>
     <div id="trainingRow" style="background:var(--panel);border:1px solid var(--rule);padding:12px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;">
       <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;">TRAINING TODAY</span>
       <button id="trainingToggleBtn" onclick="toggleTrainingCompleted()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:8px 14px;border:1.5px solid var(--ink);background:var(--panel);cursor:pointer;">NOT LOGGED</button>
     </div>
-    <div id="presleepTip" class="fix-card" style="display:none;margin-bottom:14px;"></div>
 
     <div class="log-box" style="padding:10px;">
       <button class="log-send" style="margin-top:0;" onclick="goTab('history')">LOG A MEAL — BREAKFAST, LUNCH OR DINNER →</button>
     </div>
     <button class="log-send" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);margin-bottom:14px;" onclick="goTab('progress')">VIEW 30-DAY PROGRESS →</button>
+    <button class="log-send" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);margin-bottom:14px;" onclick="showFoodGuide()">FOOD &amp; DISH GUIDE →</button>
     <div class="section-lbl">TODAY, AT A GLANCE</div>
     <div id="todaySummary"></div>
   </div>
@@ -492,14 +495,6 @@
   <div class="screen" id="screen-progress">
     <div class="back-row" onclick="goTab('home')"><span class="back-arrow">‹</span><div class="result-title">Last 30 Days</div></div>
     <div id="progressBody"></div>
-  </div>
-  <!-- LOG (browse full dish list) -->
-  <div class="screen" id="screen-log">
-    <div class="app-header"><div class="app-logo" style="font-size:16px;">Browse dishes</div></div>
-    <div class="log-box">
-      <input type="text" id="searchInput" placeholder="Search dishes..." oninput="renderDishBrowser()">
-    </div>
-    <div id="dishBrowser"></div>
   </div>
 
   <!-- RESULT -->
@@ -518,7 +513,6 @@
     </div>
     <div class="conf-note" style="margin-bottom:14px;">Spreading protein evenly across meals supports 24h muscle repair better than one big meal (Mamerow et al., 2014) — most reliable for general/athletic adults; less settled for older adults specifically.</div>
 
-    <div id="nextMealBanner"></div>
     <div id="mealSlotSections"></div>
 
     
@@ -634,12 +628,12 @@
   <!-- RESTAURANT: MENU -->
   <div class="screen" id="screen-menu">
     <div class="app-header">
-      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>WHOL<span>AMINO</span></div>
+      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>Whol<span>Amino</span></div>
     </div>
     <div class="segment-switcher" id="segmentSwitcherMenu">
       <button class="segment-btn" id="segBtnMenu-SPORTS" onclick="setSegment('SPORTS')">SPORTS</button>
       <button class="segment-btn" id="segBtnMenu-GYM" onclick="setSegment('GYM')">GYM</button>
-      <button class="segment-btn" id="segBtnMenu-HOME" onclick="setSegment('HOME')">HOME</button>
+      <button class="segment-btn" id="segBtnMenu-HOME" onclick="setSegment('HOME')">WORK PROF</button>
       <button class="segment-btn" id="segBtnMenu-RESTAURANT" onclick="setSegment('RESTAURANT')">RESTAURANT</button>
     </div>
     <div class="week-stats">
@@ -715,7 +709,6 @@ yogurt 40"></textarea>
 
   <div class="tabbar" id="tabbarPersonal">
     <button class="tab active" id="tabBtn-home" onclick="goTab('home')"><div class="tab-icon">◆</div><span class="tab-lbl">HOME</span></button>
-    <button class="tab" id="tabBtn-log" onclick="goTab('log')"><div class="tab-icon">+</div><span class="tab-lbl">LOG</span></button>
     <button class="tab" id="tabBtn-history" onclick="goTab('history')"><div class="tab-icon">≡</div><span class="tab-lbl">MEALS</span></button>
     <button class="tab" id="tabBtn-profile" onclick="goTab('profile')"><div class="tab-icon">●</div><span class="tab-lbl">PROFILE</span></button>
   </div>
@@ -736,11 +729,11 @@ yogurt 40"></textarea>
       <div class="onboard-title" id="onboardTitle">Let's set up your training profile</div>
       <div class="onboard-sub" id="onboardSub">This sets your daily protein, fiber, and fluid targets. You can change it anytime in Profile.</div>
       <div class="onboard-row">
-        <div class="onboard-field" style="flex:1;"><label>NAME</label><input type="text" id="onboardName" value="Ananya"></div>
+        <div class="onboard-field" style="flex:1;"><label>NAME</label><input type="text" id="onboardName"></div>
       </div>
       <div class="onboard-row">
-        <div class="onboard-field"><label>WEIGHT (KG)</label><input type="number" id="onboardWeight" value="65"></div>
-        <div class="onboard-field"><label>AGE</label><input type="number" id="onboardAge" value="22"></div>
+        <div class="onboard-field"><label>WEIGHT (KG)</label><input type="number" id="onboardWeight" placeholder="e.g. 65"></div>
+        <div class="onboard-field"><label>AGE</label><input type="number" id="onboardAge" placeholder="e.g. 25"></div>
       </div>
       <div class="onboard-row" id="onboardSexRow">
         <div class="onboard-field" style="display:flex;gap:8px;align-items:flex-end;">
@@ -748,8 +741,48 @@ yogurt 40"></textarea>
           <button class="phase-opt" id="onboardSexM" style="flex:1;padding:9px;border:1.5px solid var(--ink);cursor:pointer;background:var(--panel);" onclick="onboardSetSex('M')">M</button>
         </div>
       </div>
+      <div class="onboard-row">
+        <div class="onboard-field" style="flex:1;">
+          <label>DIET PREFERENCE</label>
+          <div style="display:flex;gap:8px;">
+            <button class="phase-opt" id="onboardDietVEGAN" style="flex:1;padding:9px;border:1.5px solid var(--ink);cursor:pointer;background:var(--panel);font-size:11px;" onclick="onboardSetDiet('VEGAN')">VEGAN</button>
+            <button class="phase-opt" id="onboardDietVEG" style="flex:1;padding:9px;border:1.5px solid var(--ink);cursor:pointer;background:var(--panel);font-size:11px;" onclick="onboardSetDiet('VEG')">VEG</button>
+            <button class="phase-opt" id="onboardDietNONVEG" style="flex:1;padding:9px;border:1.5px solid var(--ink);cursor:pointer;background:var(--panel);font-size:11px;" onclick="onboardSetDiet('NONVEG')">NON-VEG</button>
+          </div>
+        </div>
+      </div>
       <div class="onboard-options" id="onboardOptions"></div>
       <button class="onboard-btn" onclick="completeOnboarding()">START TRACKING →</button>
+    </div>
+  </div>
+
+  <div class="onboard-overlay" id="sleepGateOverlay">
+    <div class="onboard-card">
+      <div class="onboard-eyebrow">BEFORE TODAY'S BREAKFAST</div>
+      <div class="onboard-title">How many hours did you sleep last night?</div>
+      <div class="onboard-sub">This is easy to lose track of since it's entered the morning after. Skipping it doesn't just leave a gap in your data — poor sleep genuinely blunts what today's protein and fiber can actually do for you: it impairs muscle protein synthesis (so less of today's protein gets used for recovery), disrupts appetite-regulating hormones (making it harder to actually hit your targets today), and is linked to reduced gut microbial diversity over time — the same gut health your fiber intake is meant to support.</div>
+      <div class="onboard-row">
+        <div class="onboard-field" style="flex:1;"><label>HOURS SLEPT</label><input type="number" id="sleepGateInput" placeholder="e.g. 7" step="0.5"></div>
+      </div>
+      <button class="onboard-btn" onclick="submitSleepGate()">LOG SLEEP →</button>
+      <div style="text-align:center;margin-top:12px;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="skipSleepGate()">Skip for now</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="onboard-overlay" id="hydrationNudgeOverlay">
+    <div class="onboard-card">
+      <div class="onboard-eyebrow">QUICK CHECK-IN</div>
+      <div class="onboard-title">How much water have you had so far today?</div>
+      <div class="onboard-sub">Even mild under-hydration measurably affects focus, energy, and physical performance — often before you consciously feel thirsty, which is exactly why it's the easiest target to quietly under-track. A couple of taps now keeps today's numbers honest.</div>
+      <div class="onboard-row">
+        <div class="onboard-field" style="flex:1;"><label>ADD (ML)</label><input type="number" id="hydrationNudgeInput" placeholder="e.g. 500"></div>
+      </div>
+      <button class="onboard-btn" onclick="submitHydrationNudge()">LOG IT →</button>
+      <div style="text-align:center;margin-top:12px;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="dismissHydrationNudge()">Not now</span>
+      </div>
     </div>
   </div>
 
@@ -1165,6 +1198,63 @@ async function loadDailyMetrics(){
 }
 
 
+let homeProgressSummary = null; // cached once per login — NOT re-fetched on every render(), same cost concern as the full Progress screen
+
+async function loadHomeProgressSummary(){
+  if(!sb || !currentUser) return;
+  const tier = getCurrentTier();
+  let anchorDate, totalDays, label;
+  if(tier === 'start'){
+    // Free trial — anchored to actual signup date, capped at FREE_TRIAL_DAYS.
+    // Showing a 3-day window (not a generic 30) is deliberate: it reflects
+    // exactly what the free trial actually covers, and doubles as a natural
+    // preview of what a longer HABIT/TRANSFORM window would show instead.
+    anchorDate = new Date(currentUser.created_at);
+    totalDays = FREE_TRIAL_DAYS;
+    label = 'TRIAL';
+  } else {
+    // Paid plan — anchored to the SAME created_at the PDF report uses for
+    // periodStart, so this summary and the eventual report tell the same
+    // story, not two slightly different numbers.
+    const sub = currentSubscriptions.find(s => s.plan_type === tier && s.current_period_end && new Date(s.current_period_end) > new Date());
+    if(!sub) return;
+    anchorDate = new Date(sub.created_at);
+    totalDays = PROGRAM_LABELS[tier].days;
+    label = PROGRAM_LABELS[tier].name;
+  }
+  anchorDate.setHours(0,0,0,0);
+
+  const { data, error } = await sb.from('logged_meals')
+    .select('usable_g, logged_at')
+    .eq('user_id', currentUser.id)
+    .gte('logged_at', anchorDate.toISOString())
+    .order('logged_at');
+  if(error){ console.error('Home progress summary load failed:', error); return; }
+
+  const targets = computeTargets();
+  const byDay = {};
+  (data||[]).forEach(m => {
+    const d = new Date(m.logged_at).toISOString().slice(0,10);
+    byDay[d] = (byDay[d]||0) + (m.usable_g||0);
+  });
+
+  const now = new Date();
+  const daysSoFar = Math.min(totalDays, Math.floor((now - anchorDate) / (1000*60*60*24)) + 1);
+  let daysHit = 0, daysLogged = 0;
+  for(let i=0;i<daysSoFar;i++){
+    const d = new Date(anchorDate);
+    d.setDate(d.getDate()+i);
+    const key = d.toISOString().slice(0,10);
+    if(byDay[key] !== undefined){
+      daysLogged++;
+      if(byDay[key] >= targets.protein) daysHit++;
+    }
+  }
+
+  homeProgressSummary = { tier, label, totalDays, daysSoFar, daysHit, daysLogged };
+  render();
+}
+
 async function loadProgressData(){
   // Fetched lazily, only when the Progress screen is actually opened — no
   // reason to pull 30 days of history on every app load when Home only
@@ -1264,6 +1354,7 @@ async function loadUserData(){
     state.myDishes = dishes.map(d => ({ id: d.id, name: d.name, recipe: d.recipe }));
   }
   await checkSubscriptionStatus();
+  loadHomeProgressSummary(); // fire-and-forget — fills in once ready, doesn't block the render above
   render();
 }
 
@@ -1472,7 +1563,7 @@ async function checkAuthAndInit(){
     currentUser = session.user;
     enterApp();
     await loadUserData();
-    if(!state.onboarded[state.segment]) showOnboarding(state.segment);
+    if(!state.onboarded[state.segment]) showOnboarding(state.segment); else maybeShowHydrationNudge();
     localStorage.removeItem('wholamino_pending_segment');
   }
   // else: not signed in — leave the landing page showing (it's the default
@@ -1489,7 +1580,7 @@ async function checkAuthAndInit(){
       // that was never actually left.
       enterApp();
       await loadUserData();
-      if(!state.onboarded[state.segment]) showOnboarding(state.segment);
+      if(!state.onboarded[state.segment]) showOnboarding(state.segment); else maybeShowHydrationNudge();
       localStorage.removeItem('wholamino_pending_segment');
     }
   });
@@ -1778,9 +1869,9 @@ const DISHES = [
 let state = {
   segment: "SPORTS",
   name: "",
-  weight: 65,
-  age: 22,
-  sex: "F",
+  weight: null,
+  age: null,
+  sex: null,
   phase: "competition",
   goal: "general",
   trainingStyle: null,
@@ -2002,17 +2093,6 @@ function cycleMealSlot(){
   showResult(state.pendingResult, false);
 }
 
-function logMeal(name, recipe){
-  const blend = recipe.map(([s,g])=>({source:s,grams:g}));
-  const r = computeScoreFromGrams(blend);
-  if(!r) return;
-  const tier = tierForScore(r.score);
-  const entry = { name, ...r, tier, time: new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}), mealSlot: inferMealSlot() };
-  state.pendingResult = entry;
-  showResult(entry, false);
-  goTab('result');
-}
-
 const FREE_LOG_LIMIT = 9;
 const FREE_TRIAL_DAYS = 3;
 function daysSinceSignup(){
@@ -2085,6 +2165,26 @@ async function saveResult(){
 
 function addFiber(g){ state.fiberLogged += g; render(); syncProfile(); }
 function addFluid(l){ state.fluidLogged += l; render(); syncProfile(); }
+
+let hydrationNudgeShownThisSession = false;
+function maybeShowHydrationNudge(){
+  // Shown once per app session (not on every render) — hydration is the one
+  // target nobody logs unless directly asked, since there's no natural
+  // moment (like a meal) that prompts it.
+  if(hydrationNudgeShownThisSession) return;
+  if(state.fluidLogged > 0) return;
+  if(!currentUser) return; // don't nudge someone browsing without an account yet
+  hydrationNudgeShownThisSession = true;
+  document.getElementById('hydrationNudgeOverlay').classList.add('show');
+}
+function submitHydrationNudge(){
+  const ml = Number(document.getElementById('hydrationNudgeInput').value);
+  if(ml && ml > 0){ state.fluidLogged += ml/1000; syncProfile(); render(); }
+  document.getElementById('hydrationNudgeOverlay').classList.remove('show');
+}
+function dismissHydrationNudge(){
+  document.getElementById('hydrationNudgeOverlay').classList.remove('show');
+}
 function addFluidCustom(){
   const input = document.getElementById('fluidCustomInput');
   const ml = Number(input.value);
@@ -2208,10 +2308,19 @@ function showOnboarding(segment){
   // a genuinely returning user's real saved name is untouched.
   const displayName = state.name === 'Athlete' ? '' : (state.name || '');
   document.getElementById('onboardName').value = displayName;
-  document.getElementById('onboardWeight').value = state.weight;
-  document.getElementById('onboardAge').value = state.age;
+  document.getElementById('onboardWeight').value = state.weight || '';
+  document.getElementById('onboardAge').value = state.age || '';
   onboardSetSex(state.sex);
+  onboardSetDiet(state.dietType);
   document.getElementById('onboardOverlay').classList.add('show');
+}
+
+function onboardSetDiet(diet){
+  state.dietType = diet;
+  ['VEGAN','VEG','NONVEG'].forEach(d => {
+    const el = document.getElementById('onboardDiet'+d);
+    if(el){ el.style.background = d===diet ? 'var(--ink)' : 'var(--panel)'; el.style.color = d===diet ? '#fff' : 'var(--ink)'; }
+  });
 }
 
 function onboardSetSex(sex){
@@ -2236,10 +2345,17 @@ function renderOnboardOptions(){
   }
   if(!options){
     document.getElementById('onboardOptions').innerHTML = '';
-    onboardAnswer = 'none';
+    onboardAnswer = 'none'; // no question actually applies here (e.g. HOME + Male) — this IS the real, final answer, not a placeholder
     return;
   }
-  if(!onboardAnswer || !options.find(o=>o.value===onboardAnswer)) onboardAnswer = options[0].value;
+  // Previously this auto-selected options[0] the instant the sheet rendered
+  // — meaning someone could see "General training" already highlighted and
+  // tap through without ever consciously choosing it, the exact same
+  // silent-default pattern already fixed for Name/Weight/Age/Sex/Diet. Now
+  // it only keeps a PRIOR answer if it's still genuinely valid for the
+  // current option set (e.g. returning to the same segment they'd already
+  // answered before) — otherwise it stays unset until the user actually taps one.
+  if(onboardAnswer && !options.find(o=>o.value===onboardAnswer)) onboardAnswer = null;
   document.getElementById('onboardOptions').innerHTML = options.map(o=>
     `<div class="onboard-opt ${o.value===onboardAnswer?'selected':''}" onclick="selectOnboardOption('${o.value}')"><b>${o.label}</b>${o.desc?`<span>${o.desc}</span>`:''}</div>`
   ).join('');
@@ -2255,11 +2371,40 @@ function completeOnboarding(){
   const enteredWeight = Number(document.getElementById('onboardWeight').value);
   const enteredAge = Number(document.getElementById('onboardAge').value);
 
+  // All fields here are mandatory — no silent fallback to a hidden default
+  // (previously Name fell back to whatever was already in state, Sex quietly
+  // defaulted to 'F', and Diet had no check at all). Every one now requires
+  // an actual choice, same standard as Weight/Age above.
+  if(!enteredName){
+    alert("Enter your name to continue.");
+    return;
+  }
+  if(!enteredWeight || enteredWeight <= 0){
+    alert("Enter your weight to continue — this sets your daily targets.");
+    return;
+  }
+  if(!enteredAge || enteredAge <= 0){
+    alert("Enter your age to continue — this sets your daily targets.");
+    return;
+  }
+  if(!state.sex){
+    alert("Select your sex to continue — this sets your daily targets.");
+    return;
+  }
+  if(!state.dietType){
+    alert("Select a diet preference to continue — this tunes your meal suggestions.");
+    return;
+  }
+  if(!onboardAnswer){
+    alert("Select an option above to continue.");
+    return;
+  }
+
   const proceed = confirm(`Setting up your ${onboardSegment==='SPORTS'?'Sports':onboardSegment==='GYM'?'Gym':'Working Professionals'} experience — targets and tracking built around this. You can always switch later from Settings. Ready?`);
   if(!proceed) return;
-  state.name = enteredName || state.name;
-  state.weight = enteredWeight || state.weight;
-  state.age = enteredAge || state.age;
+  state.name = enteredName;
+  state.weight = enteredWeight;
+  state.age = enteredAge;
   if(onboardSegment === 'SPORTS') state.phase = onboardAnswer;
   if(onboardSegment === 'GYM') state.goal = onboardAnswer;
   if(onboardSegment === 'HOME') state.lifeStage = onboardAnswer;
@@ -2306,14 +2451,14 @@ function resetSession(){
 function goTab(tab){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const screenMap = {home:'screen-home', log:'screen-log', history:'screen-history', profile:'screen-profile', result:'screen-result',
+  const screenMap = {home:'screen-home', history:'screen-history', profile:'screen-profile', result:'screen-result',
                       menu:'screen-menu', audit:'screen-audit', reports:'screen-reports', rprofile:'screen-restaurant-profile',
                       progress:'screen-progress'};
   document.getElementById(screenMap[tab]).classList.add('active');
   if(document.getElementById('tabBtn-'+tab)) document.getElementById('tabBtn-'+tab).classList.add('active');
   document.getElementById('whatsappSupportBtn').style.display = (tab === 'home') ? 'flex' : 'none';
-  if(tab==='log') renderDishBrowser();
-  if(tab==='history'){ renderHistory(); renderMealSlotSections(); renderNextMealBanner(); }
+  if(tab==='home') renderNextMealBanner();
+  if(tab==='history'){ renderHistory(); renderMealSlotSections(); }
   if(tab==='menu') renderMenu();
   if(tab==='audit') renderAuditPresets();
   if(tab==='reports') renderReports();
@@ -2401,15 +2546,24 @@ function setMobilityType(slot, type){
   }
 }
 
-function renderDishBrowser(){
-  const q = (document.getElementById('searchInput').value||'').toLowerCase();
-  const filtered = DISHES.filter(([name])=>name.toLowerCase().includes(q));
-  document.getElementById('dishBrowser').innerHTML = filtered.map(([name,recipe])=>{
-    return `<div class="activity-row" onclick='logMeal(${JSON.stringify(name)}, ${JSON.stringify(recipe)})'><div class="activity-name">${name}</div><span style="color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:11px;">›</span></div>`;
-  }).join('') || '<div class="empty-note">No dishes match.</div>';
-}
+let pendingBreakfastLog = null;
+let sleepGateResolvedToday = false;
 
 function logMealToSlot(name, recipe, slot, originalQuery, hadGap){
+  // Sleep has a lag effect — last night's sleep is entered the next day, and
+  // easy to forget since nothing else prompts for it. Catching it right
+  // before the first meal of the day (Breakfast) is the one moment it's
+  // guaranteed to still be relevant and not yet stale.
+  // Skip this entirely on day 1 — someone who just finished onboarding
+  // hasn't had a night as a WholAmino user yet, so "how did you sleep last
+  // night" is a nonsensical first interaction. This only makes sense from
+  // the second calendar day onward, once there's an actual previous night
+  // to ask about.
+  if(slot === 'Breakfast' && !state.sleepLogged && !sleepGateResolvedToday && daysSinceSignup() >= 1){
+    pendingBreakfastLog = { name, recipe, slot, originalQuery, hadGap };
+    showSleepGate();
+    return;
+  }
   const blend = recipe.map(([s,g])=>({source:s,grams:g}));
   const r = computeScoreFromGrams(blend);
   if(!r) return;
@@ -2418,6 +2572,35 @@ function logMealToSlot(name, recipe, slot, originalQuery, hadGap){
   state.pendingResult = entry;
   showResult(entry, false);
   goTab('result');
+}
+
+function showSleepGate(){
+  document.getElementById('sleepGateOverlay').classList.add('show');
+}
+
+function resumePendingBreakfastLog(){
+  document.getElementById('sleepGateOverlay').classList.remove('show');
+  sleepGateResolvedToday = true;
+  if(pendingBreakfastLog){
+    const p = pendingBreakfastLog;
+    pendingBreakfastLog = null;
+    logMealToSlot(p.name, p.recipe, p.slot, p.originalQuery, p.hadGap);
+  }
+}
+
+function submitSleepGate(){
+  const val = Number(document.getElementById('sleepGateInput').value);
+  if(!val || val <= 0){
+    alert("Enter a number of hours, or tap \"Skip for now\" instead.");
+    return;
+  }
+  state.sleepLogged = val;
+  syncProfile();
+  resumePendingBreakfastLog();
+}
+
+function skipSleepGate(){
+  resumePendingBreakfastLog();
 }
 
 function logFromTextSlot(slot){
@@ -2507,13 +2690,33 @@ function renderNextMealBanner(){
     const sleepOk = sleepRemaining <= 0;
     const allOk = proteinOk && fiberOk && fluidOk && sleepOk;
 
+    // Shared by both branches below — the goal chosen WITHIN a segment
+    // (competition vs general training, muscle vs fat loss, pregnant vs
+    // general) genuinely changes why these numbers matter, on top of the
+    // segment-level messaging that already existed.
+    const GOAL_CONTEXT = {
+      SPORTS: {
+        competition: `You're in a competition block right now — recovery margin is thinner than during general training, so these gaps matter more this week specifically than they would otherwise.`,
+      },
+      GYM: {
+        muscle: `Since muscle gain is your current focus, protein consistency specifically is doing more work for you than any other single factor here.`,
+        fatloss: `Since fat loss is your current focus, protein and fiber together are what help preserve muscle and control appetite while you're in a deficit — these two matter more to you right now than they would otherwise.`,
+      },
+      HOME: {
+        pregnant: `Pregnancy raises your real nutrient needs above general guidelines — treat today's targets as a floor, not a ceiling, and loop in your doctor for anything beyond general awareness.`,
+        lactating: `Breastfeeding raises your real nutrient needs above general guidelines — treat today's targets as a floor, not a ceiling, and loop in your doctor for anything beyond general awareness.`,
+      },
+    };
+    const goalKey = state.segment === 'SPORTS' ? state.phase : state.segment === 'GYM' ? state.goal : state.segment === 'HOME' ? state.lifeStage : null;
+    const goalContext = (GOAL_CONTEXT[state.segment] || {})[goalKey];
+
     if(allOk){
       const COMPLETE_MESSAGES = {
         HOME: `Today gave your body what it needs for muscle maintenance and steady digestion on a sedentary day — the real benefit isn't today specifically, it's doing this consistently.`,
         GYM: `Today's protein, fiber, hydration, and sleep support whatever you're actually training for right now — the real benefit isn't today specifically, it's stacking days like this one.`,
         SPORTS: `Today gave your body what it needs to actually adapt from training, not just survive it — the real benefit isn't today specifically, it's consistency through the training block.`,
       };
-      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">Protein, fiber, hydration, and sleep all on target.</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}</div></div>`;
+      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">Protein, fiber, hydration, and sleep all on target.</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}${goalContext ? `<br><br><em>${goalContext}</em>` : ''}</div></div>`;
       return;
     }
 
@@ -2567,7 +2770,13 @@ function renderNextMealBanner(){
       },
     };
     const seg = GAP_MESSAGES[state.segment] || GAP_MESSAGES.HOME;
+    // Segment-level messaging above already existed; goalContext (hoisted
+    // above, shared with the COMPLETE branch) adds the missing layer — the
+    // SPECIFIC goal chosen within that segment. A Gym user training for
+    // muscle gain and one training for fat loss were getting identical
+    // messaging before this.
     const parts = [];
+    if(goalContext) parts.push(`<em>${goalContext}</em>`);
     if(!proteinOk) parts.push(seg.protein);
     if(!fiberOk) parts.push(seg.fiber);
     if(!fluidOk) parts.push(seg.hydration);
@@ -2923,6 +3132,12 @@ function render(){
   document.getElementById('segBtnHome-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
   document.getElementById('segBtnMenu-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
   document.getElementById('proteinVal').textContent = proteinSum;
+  const greetingEl = document.getElementById('homeGreeting');
+  if(greetingEl){
+    greetingEl.textContent = state.name
+      ? `${state.name}, your daily Protein, Fiber, Hydration & Sleep targets are set based on your profile.`
+      : `Your daily Protein, Fiber, Hydration & Sleep targets are set based on your profile.`;
+  }
   document.getElementById('proteinTarget').textContent = targets.protein;
   document.getElementById('proteinBar').style.width = Math.min(100, proteinSum/targets.protein*100)+'%';
   document.getElementById('proteinBar').style.background = proteinSum>=targets.protein ? 'var(--usable)' : 'var(--claimed)';
@@ -2959,22 +3174,6 @@ function render(){
     btn.style.background = state.trainingCompleted ? 'var(--usable)' : 'var(--panel)';
     btn.style.color = state.trainingCompleted ? '#fff' : 'var(--ink)';
     btn.style.borderColor = state.trainingCompleted ? 'var(--usable)' : 'var(--ink)';
-  }
-
-  const tipEl = document.getElementById('presleepTip');
-  if((state.segment === 'SPORTS' || state.segment === 'GYM')){
-    tipEl.style.display = 'block';
-    const presleepOptions = {
-      VEGAN: 'soy protein or a mixed plant-protein source',
-      VEG: 'curd, paneer, or casein',
-      NONVEG: 'curd, paneer, casein, or a boiled egg',
-    };
-    // Unset defaults to the VEG-level option (dairy-inclusive) — matches what
-    // this tip always said before diet preference existed as a setting.
-    const presleepFood = presleepOptions[state.dietType] || presleepOptions.VEG;
-    tipEl.innerHTML = `<div class="h">BEFORE BED</div><p>~30-40g of a slow-digesting protein (${presleepFood}) 30-60 min before sleep can support overnight muscle repair — amino acid availability is otherwise low during the fasted overnight period. Individual sleep needs vary; this is general guidance, not a fixed rule.</p>`;
-  } else {
-    tipEl.style.display = 'none';
   }
 
   document.getElementById('todaySummary').innerHTML = state.todayMeals.length ? state.todayMeals.slice().reverse().map(m=>`
@@ -3026,11 +3225,12 @@ function render(){
   // all four options with zero gating — letting someone bypass the intended
   // Settings → "Reset my profile" flow entirely, unlike the Home screen.
   const visibleSegments = ['HOME','GYM','SPORTS'].filter(s => !isLocked || s === state.segment).concat(showRestaurant ? ['RESTAURANT'] : []);
+  const SEGMENT_CHIP_LABELS = { HOME: 'WORKING PROF.', GYM: 'GYM', SPORTS: 'SPORTS', RESTAURANT: 'RESTAURANT' };
   document.getElementById('segmentChips').innerHTML = visibleSegments.map(s=>
-    `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${s}</div>`
+    `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${SEGMENT_CHIP_LABELS[s]}</div>`
   ).join('');
   document.getElementById('segmentChipsR').innerHTML = visibleSegments.map(s=>
-    `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${s}</div>`
+    `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${SEGMENT_CHIP_LABELS[s]}</div>`
   ).join('');
 
   const DIET_OPTIONS = [
@@ -3052,7 +3252,21 @@ function render(){
   document.getElementById('tabbarPersonal').style.display = isRestaurant ? 'none' : 'flex';
   document.getElementById('tabbarRestaurant').style.display = isRestaurant ? 'flex' : 'none';
 
-  if(document.getElementById('screen-history').classList.contains('active')){ renderHistory(); renderMealSlotSections(); renderNextMealBanner(); }
+  if(document.getElementById('screen-home').classList.contains('active')) renderNextMealBanner();
+  const progressSummaryEl = document.getElementById('homeProgressSummary');
+  if(progressSummaryEl){
+    if(homeProgressSummary){
+      const s = homeProgressSummary;
+      if(s.tier === 'start'){
+        progressSummaryEl.innerHTML = `<div class="conf-note" style="margin-bottom:14px;cursor:pointer;" onclick="goTab('profile')"><strong>TRIAL PROGRESS (Day ${s.daysSoFar} of ${s.totalDays}):</strong> ${s.daysHit} of ${s.daysLogged} logged days hit your protein target. HABIT and TRANSFORM track this across a full 30 or 90-day journey — with a complete report at the end.</div>`;
+      } else {
+        progressSummaryEl.innerHTML = `<div class="conf-note" style="margin-bottom:14px;"><strong>${s.label} PROGRESS (Day ${s.daysSoFar} of ${s.totalDays}):</strong> ${s.daysHit} of ${s.daysLogged} logged days on target so far.</div>`;
+      }
+    } else {
+      progressSummaryEl.innerHTML = '';
+    }
+  }
+  if(document.getElementById('screen-history').classList.contains('active')){ renderHistory(); renderMealSlotSections(); }
   if(document.getElementById('screen-menu').classList.contains('active')) renderMenu();
   if(document.getElementById('screen-reports').classList.contains('active')) renderReports();
 }
