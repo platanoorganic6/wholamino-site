@@ -781,7 +781,7 @@ yogurt 40"></textarea>
       </div>
       <button class="onboard-btn" onclick="submitHydrationNudge()">LOG IT →</button>
       <div style="text-align:center;margin-top:12px;">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;" onclick="dismissHydrationNudge()">Not now</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink-soft);text-decoration:underline;cursor:pointer;padding:8px;" onclick="dismissHydrationNudge()">Not now</span>
       </div>
     </div>
   </div>
@@ -2623,10 +2623,10 @@ function logMealToSlot(name, recipe, slot, originalQuery, hadGap){
   // normally either way; this just surfaces the same prompt on top if
   // sleep is still genuinely missing (maybeShowSleepPrompt already handles
   // the day-1 exclusion and "already logged" check correctly on its own).
-  if(slot === 'Breakfast') maybeShowSleepPrompt();
+  if(slot === 'Breakfast') maybeShowSleepPrompt(false);
 }
 
-function maybeShowSleepPrompt(){
+function maybeShowSleepPrompt(chainToHydration = true){
   // Moved here from a pre-breakfast gate — sleep has a lag effect (last
   // night's sleep is entered the next day), so catching it right after
   // login on Home is simpler and less intrusive than intercepting whatever
@@ -2637,7 +2637,13 @@ function maybeShowSleepPrompt(){
   // there's no actual previous night to ask about yet.
   if(!currentUser) return;
   if(state.sleepLogged || daysSinceSignup() < 1){
-    maybeShowHydrationNudge();
+    // Only chain into a fresh hydration check for genuine login/day-rollover
+    // moments — NOT when this was just the breakfast safety-net finding
+    // sleep already satisfied. Without this distinction, every single
+    // breakfast log during a testing session (or normal repeated use) would
+    // silently re-trigger the hydration modal, which is what was showing up
+    // as "frequent between page switches."
+    if(chainToHydration) maybeShowHydrationNudge();
     return;
   }
   document.getElementById('sleepGateOverlay').classList.add('show');
