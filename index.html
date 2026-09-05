@@ -925,36 +925,22 @@ async function fetchPeriodMetrics(sub){
   };
 }
 
-// Shared by both the daily reflection banner and the PDF report — any place
-// recommending specific protein-dense foods needs to respect diet
-// preference, not just the dish-suggestion chips. Unset (null) shows the
-// full range, same as before this feature existed.
-function proteinFoodSuggestion(){
-  if(state.dietType === 'VEGAN') return 'extra dal, chana, tofu, soy, or a handful of peanuts';
-  if(state.dietType === 'VEG') return 'some paneer, extra dal, or a bit of yogurt';
-  return 'an egg, some paneer, extra dal, or chicken';
-}
-
 const INSIGHT_CONTENT = {
   protein: {
     label: 'Protein',
     impact: 'Consistently falling short on protein slows muscle repair and recovery, and makes it harder to hold onto lean mass — especially on training days.',
-    recommendation: null, // computed at render time via proteinFoodSuggestion() — diet preference can change after this object is defined
   },
   fiber: {
     label: 'Fiber',
     impact: 'Low fiber intake is commonly linked to sluggish digestion and bigger swings in energy and hunger through the day.',
-    recommendation: 'Add one extra fiber source per meal — whole grains, vegetables, or legumes (dal, rajma, chickpeas) are easy wins that add up fast.',
   },
   fluid: {
     label: 'Hydration',
     impact: 'Under-hydration can noticeably affect training performance, focus, and energy levels — often before you even feel thirsty.',
-    recommendation: 'Keep a bottle within reach and refill it at set points in the day (after waking, before/after training, with each meal) rather than relying on remembering to drink.',
   },
   sleep: {
     label: 'Sleep',
     impact: 'Insufficient sleep impairs recovery and can make it harder to regulate appetite and cravings the next day.',
-    recommendation: 'Aim for a consistent bedtime rather than a longer one first — even 30-60 extra minutes, at a fixed time, tends to help more than sleeping in occasionally.',
   },
 };
 
@@ -1049,25 +1035,18 @@ function generateReportPDF(sub, m){
     doc.text(focusLine, 20, y); y += focusLine.length * 5 + 10;
 
     ensureRoom(15);
-    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Insights & What To Do Next', 20, y); y += 9;
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Insights', 20, y); y += 9;
 
     gaps.forEach(g => {
       const c = INSIGHT_CONTENT[g.key];
-      const recommendationText = g.key === 'protein'
-        ? `Add a protein-dense food to your next meal (${proteinFoodSuggestion()}, or a protein shake) rather than trying to fix it in one sitting — spreading it across meals works better than one large dose.`
-        : c.recommendation;
-      ensureRoom(35);
+      ensureRoom(25);
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text(`${c.label} — ${g.pct}% of target`, 20, y); y += 6;
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
       doc.setTextColor(90);
       const impactLines = doc.splitTextToSize(c.impact, pageWidth - 4);
-      doc.text(impactLines, 24, y); y += impactLines.length * 4.8 + 3;
+      doc.text(impactLines, 24, y); y += impactLines.length * 4.8 + 8;
       doc.setTextColor(0);
-      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text('Try this:', 24, y); y += 5;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const recLines = doc.splitTextToSize(recommendationText, pageWidth - 4);
-      doc.text(recLines, 24, y); y += recLines.length * 4.8 + 8;
     });
   } else {
     ensureRoom(20);
@@ -1205,6 +1184,79 @@ async function loadDailyMetrics(){
 
 
 let homeProgressSummary = null; // cached once per login — NOT re-fetched on every render(), same cost concern as the full Progress screen
+
+// Pattern-based recommendation: NOT a generic "eat this dish" suggestion —
+// this only ever fires once a genuine repeated pattern is observed in a
+// user's OWN real logged history for a given slot (e.g., idli+sambar
+// showing up as their actual breakfast on multiple real days). Until that
+// pattern exists, this correctly returns null and the generic numeric gap
+// display (already in place) is what shows instead — there is no "day 1"
+// version of this, by design, since there's nothing real to observe yet.
+let usualDishCache = {}; // keyed by slot: 'Breakfast'/'Lunch'/'Dinner'
+
+async function detectUsualDish(slot){
+  if(!sb || !currentUser) return null;
+  const since = new Date(); since.setDate(since.getDate() - 7);
+  const { data, error } = await sb.from('logged_meals')
+    .select('name, usable_g, fiber_g, logged_at')
+    .eq('user_id', currentUser.id)
+    .eq('meal_slot', slot)
+    .gte('logged_at', since.toISOString())
+    .order('logged_at');
+  if(error){ console.error('Usual-dish detection failed:', error); return null; }
+  if(!data || data.length < 2) return null; // not enough history yet to call anything "usual"
+
+  // Group by exact dish name, counting DISTINCT DAYS (not raw log rows) —
+  // logging the same thing twice in one sitting shouldn't inflate how
+  // "usual" it looks.
+  const byName = {};
+  const allDays = new Set();
+  data.forEach(row => {
+    const day = row.logged_at.slice(0,10);
+    allDays.add(day);
+    if(!byName[row.name]) byName[row.name] = { days: new Set(), usableSum: 0, fiberSum: 0 };
+    if(!byName[row.name].days.has(day)){
+      byName[row.name].days.add(day);
+      byName[row.name].usableSum += (row.usable_g || 0);
+      byName[row.name].fiberSum += (row.fiber_g || 0);
+    }
+  });
+
+  let best = null;
+  for(const [name, stats] of Object.entries(byName)){
+    const count = stats.days.size;
+    // Needs at least 2 real occurrences AND to cover at least half the days
+    // this slot was logged at all — a one-off repeat isn't a pattern, and
+    // someone who genuinely varies their meals shouldn't get a random dish
+    // called "usual" just because it happened to repeat once.
+    if(count >= 2 && count / allDays.size >= 0.5){
+      if(!best || count > best.count) best = { name, count, avgUsable: stats.usableSum/count, avgFiber: stats.fiberSum/count };
+    }
+  }
+  return best;
+}
+
+async function loadUsualDishPatterns(){
+  if(!sb || !currentUser) return;
+  for(const slot of ['Breakfast','Lunch','Dinner']){
+    usualDishCache[slot] = await detectUsualDish(slot);
+  }
+  render();
+}
+
+// Small, diet-aware complementary add-ons — deliberately not a big list of
+// specific dishes; this exists ONLY to top up whichever gap (protein or
+// fiber) is larger for a genuinely observed usual meal, not to recommend
+// a replacement.
+function complementaryTopup(gapType){
+  const diet = state.dietType;
+  if(gapType === 'protein'){
+    if(diet === 'VEGAN') return 'a handful of roasted chana or peanuts';
+    if(diet === 'VEG') return 'a boiled egg or a small cup of curd';
+    return 'a boiled egg or a small portion of chicken';
+  }
+  return 'a side of salad or steamed vegetables'; // fiber top-up doesn't vary by diet
+}
 
 async function loadHomeProgressSummary(){
   if(!sb || !currentUser) return;
@@ -1372,6 +1424,7 @@ async function loadUserData(){
   }
   await checkSubscriptionStatus();
   loadHomeProgressSummary(); // fire-and-forget — fills in once ready, doesn't block the render above
+  loadUsualDishPatterns(); // same — fills in once a real pattern is found, correctly does nothing for a new account with no history yet
   render();
 }
 
@@ -1666,18 +1719,6 @@ const SOURCES = {
   dressing:{name:"Salad Dressing (generic)",digestibility:.85,protein_per_100g:1.0,fiber_per_100g:0,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
 };
 
-const FIX_SUGGESTION = {
-  Lys:"Add a lysine-rich legume — try Chana Dal or Moong Dal",
-  SAA:"Add a methionine-rich cereal or grain — try Rice or Wheat",
-  Thr:"Add Casein or Egg to top up threonine",
-  Trp:"Add Egg or Whey — both are strong in tryptophan",
-  His:"Add Whey or Moong Dal to top up histidine",
-  Ile:"Add Whey or Egg to top up isoleucine",
-  Leu:"Add Whey Isolate — the strongest leucine source here",
-  AAA:"Add Peanut or Casein to top up phenylalanine/tyrosine",
-  Val:"Add Whey or Rice to top up valine",
-};
-
 function computeScoreFromGrams(recipeGrams, claimedOverride) {
   const contributions = recipeGrams.map(r => {
     const src = SOURCES[r.source];
@@ -1699,7 +1740,7 @@ function computeScoreFromGrams(recipeGrams, claimedOverride) {
   const score = Math.round(Math.min(minRatio, 1.5) * 100);
   const usableG = +(claimed * Math.min(minRatio, 1)).toFixed(1);
   return { score, limitingAA, limitingAALabel: AA_LABELS[limitingAA], usableG, claimedG: claimed, fiberG: totalFiber,
-           ratios, fixSuggestion: FIX_SUGGESTION[limitingAA] || "", recipeUsed: recipeGrams };
+           ratios, recipeUsed: recipeGrams };
 }
 function tierForScore(score) {
   if (score >= 100) return "COMPLETE";
@@ -2190,6 +2231,10 @@ function maybeShowHydrationNudge(){
   // only ever showed once per session regardless of how many times someone
   // logged back in the same day.
   if(!currentUser) return; // don't nudge someone browsing without an account yet
+  // Same reasoning as the sleep prompt — HOME (Working Professionals) has
+  // the Fluid pillar hidden entirely, so nudging for it would ask about
+  // something they have no visible way to see tracked.
+  if(state.segment === 'HOME') return;
   const targets = computeTargets();
   if(state.fluidLogged >= targets.fluid) return;
   document.getElementById('hydrationNudgeOverlay').classList.add('show');
@@ -2576,7 +2621,6 @@ function showResult(entry, saved){
       <div>FIBER FROM THIS MEAL: <strong>${entry.fiberG||0}g</strong></div>
     </div>
     ${limitingAAExplain}
-    <div class="fix-card"><div class="h">SUGGESTED FIX</div><p>${entry.fixSuggestion || "Nothing needed — every essential amino acid clears requirement."}</p></div>
     ${mobilityCard}
     <div class="conf-row"><div class="conf-badge">ESTIMATED</div><div class="conf-note">Illustrative composition, not lab-verified</div></div>
     <div class="section-lbl">AMINO ACID COVERAGE</div>
@@ -2636,6 +2680,14 @@ function maybeShowSleepPrompt(chainToHydration = true){
   // appearing until the next day's first login. Skipped entirely on day 1 —
   // there's no actual previous night to ask about yet.
   if(!currentUser) return;
+  // HOME (Working Professionals) segment doesn't track sleep at all — the
+  // Sleep pillar is deliberately hidden for them on Home. Asking about it
+  // via this prompt without that context would be confusing: nowhere to
+  // even see the value they just entered.
+  if(state.segment === 'HOME'){
+    if(chainToHydration) maybeShowHydrationNudge();
+    return;
+  }
   if(state.sleepLogged || daysSinceSignup() < 1){
     // Only chain into a fresh hydration check for genuine login/day-rollover
     // moments — NOT when this was just the breakfast safety-net finding
@@ -2785,29 +2837,26 @@ function renderNextMealBanner(){
     }
 
     // Days 1-3 of a brand-new account get a deliberately different voice —
-    // reassuring and forward-looking, focused on ONE clear fix for tomorrow,
-    // rather than a clinical list of every shortfall at once. The detailed
-    // per-metric breakdown (below) is still exactly right once someone's
-    // past the very first days and used to seeing their own numbers.
+    // reassuring, focused on naming ONE clear gap rather than a clinical
+    // list of every shortfall at once. No prescribed fix here — the app's
+    // job right now is accurate interpretation (what's actually short, and
+    // by how much), not recommending specific actions before there's a real
+    // established pattern to base that on.
     if(daysSinceSignup() <= FREE_TRIAL_DAYS){
       const gaps = [
-        { key:'protein', ok:proteinOk, pct: targets.protein ? proteinRemaining/targets.protein : 0,
-          fix: `Add one protein-dense item to whichever meal felt lightest today — ${proteinFoodSuggestion()} works well.` },
-        { key:'fiber', ok:fiberOk, pct: targets.fiber ? fiberRemaining/targets.fiber : 0,
-          fix: "Add a vegetable side or a handful of salad to one meal tomorrow — small additions add up faster than you'd expect." },
-        { key:'hydration', ok:fluidOk, pct: targets.fluid ? fluidRemaining/targets.fluid : 0,
-          fix: "Keep a bottle within reach tomorrow and take a few sips after each meal — hydration is the easiest one to quietly under-do." },
-        { key:'sleep', ok:sleepOk, pct: targets.sleep ? sleepRemaining/targets.sleep : 0,
-          fix: "Try winding down just 30 minutes earlier tonight — even a small, consistent shift adds up over a few nights." },
+        { key:'protein', ok:proteinOk, pct: targets.protein ? proteinRemaining/targets.protein : 0 },
+        { key:'fiber', ok:fiberOk, pct: targets.fiber ? fiberRemaining/targets.fiber : 0 },
+        { key:'hydration', ok:fluidOk, pct: targets.fluid ? fluidRemaining/targets.fluid : 0 },
+        { key:'sleep', ok:sleepOk, pct: targets.sleep ? sleepRemaining/targets.sleep : 0 },
       ].filter(g => !g.ok).sort((a,b) => b.pct - a.pct);
       const topGap = gaps[0];
       el.innerHTML = `<div class="nextmeal-banner">
         <div class="nextmeal-eyebrow">DAY ${daysSinceSignup()} — GETTING STARTED</div>
         <div class="nextmeal-title">A gap here and there is completely normal right now.</div>
         <div class="nextmeal-target">
-          You're still finding your baseline — that's the whole point of these first few days. I'm not here to judge today's numbers, just to help you close the gap.<br><br>
-          <strong>One thing to focus on tomorrow (${topGap.key}):</strong> ${topGap.fix}<br><br>
-          Stick with something like this for a couple of weeks and it genuinely starts showing up — HABIT and TRANSFORM track that trend for you automatically and send a full report so you can actually see the progress, not just guess at it.
+          You're still finding your baseline — that's the whole point of these first few days. I'm not here to judge today's numbers, just to help you see them clearly.<br><br>
+          <strong>Your biggest gap today was ${topGap.key}</strong>, at ${Math.round((1-topGap.pct)*100)}% of target.<br><br>
+          Keep logging what you actually eat — HABIT and TRANSFORM track the pattern that emerges from that and send a full report so you can see real progress, not just today's snapshot.
         </div>
       </div>`;
       return;
@@ -2852,21 +2901,39 @@ function renderNextMealBanner(){
   const nextSlot = remainingSlots[0];
   const targetForNextMeal = Math.round(proteinRemaining / remainingSlots.length);
 
-  // Real dishes whose actual computed usable protein is closest to what's needed —
-  // not a generic tip, an actual pick from the library.
-  const scored = DISHES.filter(([name, recipe]) => isSuggestable(name, recipe)).map(([name, recipe]) => {
-    const blend = recipe.map(([s,g])=>({source:s, grams:g}));
-    const r = computeScoreFromGrams(blend);
-    if(!r) return null;
-    return { name, recipe, usableG: r.usableG, score: r.score, diff: Math.abs(r.usableG - targetForNextMeal) };
-  }).filter(Boolean).sort((a,b) => a.diff - b.diff).slice(0,3);
+  // Only ever shows if a REAL repeated pattern was found in this user's own
+  // history for this slot (see detectUsualDish) — there is no day-1 version
+  // of this by design. Falls through to the generic numeric display below
+  // for anyone without an established pattern yet.
+  const usual = usualDishCache[nextSlot];
+  if(usual){
+    const slotProteinTarget = targets.protein / 3;
+    const slotFiberTarget = targets.fiber / 3;
+    const proteinGap = slotProteinTarget - usual.avgUsable;
+    const fiberGap = slotFiberTarget - usual.avgFiber;
+    if(proteinGap <= 2 && fiberGap <= 2){
+      el.innerHTML = `<div class="nextmeal-banner">
+        <div class="nextmeal-eyebrow">NEXT UP — ${nextSlot.toUpperCase()}</div>
+        <div class="nextmeal-title">Your usual ${usual.name} already covers this well.</div>
+        <div class="nextmeal-target">~${Math.round(usual.avgUsable)}g usable protein, ${Math.round(usual.avgFiber)}g fiber — no change needed here.</div>
+      </div>`;
+    } else {
+      const gapType = proteinGap > fiberGap ? 'protein' : 'fiber';
+      const topup = complementaryTopup(gapType);
+      el.innerHTML = `<div class="nextmeal-banner">
+        <div class="nextmeal-eyebrow">NEXT UP — ${nextSlot.toUpperCase()}</div>
+        <div class="nextmeal-title">You usually have ${usual.name} for ${nextSlot.toLowerCase()}.</div>
+        <div class="nextmeal-target">That gives ~${Math.round(usual.avgUsable)}g protein and ${Math.round(usual.avgFiber)}g fiber — a bit short on ${gapType} for this meal. Adding ${topup} would close most of the rest.</div>
+      </div>`;
+    }
+    return;
+  }
 
   el.innerHTML = `
     <div class="nextmeal-banner">
       <div class="nextmeal-eyebrow">NEXT UP — ${nextSlot.toUpperCase()}</div>
       <div class="nextmeal-title">Aim for ~${targetForNextMeal}g usable protein at ${nextSlot.toLowerCase()}</div>
       <div class="nextmeal-target">${proteinRemaining}g protein and ${fiberRemaining}g fiber still needed today, split across ${remainingSlots.length} remaining meal${remainingSlots.length>1?'s':''}</div>
-      ${scored.map(s => `<div class="nextmeal-suggestion" onclick='logMealToSlot(${JSON.stringify(s.name)}, ${JSON.stringify(s.recipe)}, ${JSON.stringify(nextSlot)})'><b>${s.name}</b><span>${s.usableG}g usable protein — tap to log for ${nextSlot}</span></div>`).join('')}
     </div>
   `;
 }
@@ -3009,21 +3076,13 @@ function renderMealSlotSections(){
       return `<div class="activity-row" onclick="showResult(${mJson}, true); goTab('result');"><div class="activity-name">${m.name}</div><div class="mini-badge ${tierClass(m.tier)}">${m.score}</div></div>`;
     }).join('');
 
-    // Suggestions here used to just be the first 4 dishes in the whole
-    // library, regardless of meal slot or how much protein/fiber this
-    // specific slot is actually still short — which is how "Pickle" ended
-    // up suggested for breakfast. Now it's scored against THIS slot's real
-    // remaining gap (already computed above as proteinActual/proteinPerSlot),
-    // filtered by diet preference, and excludes side/condiment-only entries
-    // — so what's shown is something that would genuinely help close today's
-    // actual shortfall, not an arbitrary static list.
-    const slotProteinGap = Math.max(0, proteinPerSlot - proteinActual);
-    const slotSuggestions = DISHES.filter(([name, recipe]) => isSuggestable(name, recipe)).map(([name, recipe]) => {
-      const blend = recipe.map(([s,g])=>({source:s, grams:g}));
-      const r = computeScoreFromGrams(blend);
-      if(!r) return null;
-      return { name, recipe, usableG: r.usableG, diff: Math.abs(r.usableG - slotProteinGap) };
-    }).filter(Boolean).sort((a,b) => a.diff - b.diff).slice(0,4);
+    // These suggestion chips previously scored dishes against the slot's
+    // remaining gap and framed them as "recommendations" — but logging a
+    // meal is inherently retrospective (you've already eaten, you're just
+    // recording it). Recommending food someone should eat, shown at the
+    // exact moment they're logging what they already ate, doesn't match how
+    // this is actually used. Free-text search below already handles finding
+    // and logging whatever was actually eaten, including combos and typos.
 
     return `<div class="mealslot-card">
       <div class="mealslot-head"><div class="mealslot-name">${slot}</div><div class="mealslot-status" style="background:${statusBg};color:${statusFg};">${statusLabel}</div></div>
@@ -3036,9 +3095,6 @@ function renderMealSlotSections(){
         <div class="mealslot-track"><div class="mealslot-fill" style="width:${fiberPct}%;background:var(--warn);"></div></div>
       </div>
       ${mealRows ? `<div style="margin-top:8px;">${mealRows}</div>` : ''}
-      <div class="chip-row" style="margin-top:10px;">
-        ${slotSuggestions.map(s => `<div class="chip" onclick='logMealToSlot(${JSON.stringify(s.name)}, ${JSON.stringify(s.recipe)}, ${JSON.stringify(slot)})'>${s.name}</div>`).join('')}
-      </div>
       <div class="log-box" style="margin-top:10px;padding:8px;">
         <input type="text" id="mealInput${slot}" placeholder="What did you eat for ${slot.toLowerCase()}?">
         <button class="log-send" style="margin-top:6px;" onclick="logFromTextSlot('${slot}')">LOG ${slot.toUpperCase()} →</button>
