@@ -758,7 +758,7 @@ yogurt 40"></textarea>
 
   <div class="onboard-overlay" id="sleepGateOverlay">
     <div class="onboard-card">
-      <div class="onboard-eyebrow">BEFORE TODAY'S BREAKFAST</div>
+      <div class="onboard-eyebrow">QUICK CHECK-IN</div>
       <div class="onboard-title">How many hours did you sleep last night?</div>
       <div class="onboard-sub">This is easy to lose track of since it's entered the morning after. Skipping it doesn't just leave a gap in your data — poor sleep genuinely blunts what today's protein and fiber can actually do for you: it impairs muscle protein synthesis (so less of today's protein gets used for recovery), disrupts appetite-regulating hormones (making it harder to actually hit your targets today), and is linked to reduced gut microbial diversity over time — the same gut health your fiber intake is meant to support.</div>
       <div class="onboard-row">
@@ -816,6 +816,12 @@ const SUPABASE_CONFIGURED = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABAS
 
 let sb = null;
 let currentUser = null;
+// Guards against a duplicate loadUserData() call (a real Supabase behavior —
+// duplicate sign-in/token-refresh events happen) overwriting fresh local
+// hydration/sleep/fiber/training values with stale database ones before a
+// sync has landed. Only the genuine first load of a session trusts the DB
+// for these fields; after that, local state is authoritative.
+let hasLoadedUserDataThisSession = false;
 if(SUPABASE_CONFIGURED && window.supabase){
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
@@ -1301,11 +1307,20 @@ async function loadUserData(){
     // Fiber/fluid/sleep/training are running/daily-state values, not date-filtered
     // like meals are — reset them here if the stored date isn't today, so "daily
     // tracking" is actually daily instead of accumulating across days.
-    const todayStr = new Date().toISOString().slice(0,10);
-    if(profile.last_logged_date === todayStr){
-      state.fiberLogged = profile.fiber_logged; state.fluidLogged = profile.fluid_logged; state.sleepLogged = profile.sleep_logged;
-      state.trainingCompleted = !!profile.training_completed;
-    } else {
+    // Same race condition already fixed for name/sex/weight/age, found here
+    // too: if loadUserData() runs a SECOND time this session (a duplicate
+    // sign-in or token-refresh event from Supabase — a real, documented
+    // occurrence) before a just-logged hydration/sleep entry's sync has
+    // actually landed, this used to silently overwrite it with a stale
+    // value, or even re-run the day-rollover reset a second time and wipe
+    // something logged in between. This whole block now only runs on the
+    // genuine first load of a session — local state is authoritative after that.
+    if(!hasLoadedUserDataThisSession){
+      const todayStr = new Date().toISOString().slice(0,10);
+      if(profile.last_logged_date === todayStr){
+        state.fiberLogged = profile.fiber_logged; state.fluidLogged = profile.fluid_logged; state.sleepLogged = profile.sleep_logged;
+        state.trainingCompleted = !!profile.training_completed;
+      } else {
       // Day boundary crossed — snapshot yesterday's final numbers into
       // daily_metrics BEFORE resetting, so hydration/sleep (which otherwise
       // have no history at all, only ever "today's running value") start
@@ -1330,8 +1345,10 @@ async function loadUserData(){
       }
       state.fiberLogged = 0; state.fluidLogged = 0; state.sleepLogged = 0; state.trainingCompleted = false;
       syncProfile(); // persist the reset immediately, don't wait for the next manual change
+      }
     }
   }
+  hasLoadedUserDataThisSession = true;
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const { data: meals } = await sb.from('logged_meals').select('*').eq('user_id', currentUser.id).gte('logged_at', todayStart.toISOString()).order('logged_at');
   if(meals){
@@ -1563,7 +1580,7 @@ async function checkAuthAndInit(){
     currentUser = session.user;
     enterApp();
     await loadUserData();
-    if(!state.onboarded[state.segment]) showOnboarding(state.segment); else maybeShowHydrationNudge();
+    if(!state.onboarded[state.segment]) showOnboarding(state.segment); else maybeShowSleepPrompt();
     localStorage.removeItem('wholamino_pending_segment');
   }
   // else: not signed in — leave the landing page showing (it's the default
@@ -1580,7 +1597,7 @@ async function checkAuthAndInit(){
       // that was never actually left.
       enterApp();
       await loadUserData();
-      if(!state.onboarded[state.segment]) showOnboarding(state.segment); else maybeShowHydrationNudge();
+      if(!state.onboarded[state.segment]) showOnboarding(state.segment); else maybeShowSleepPrompt();
       localStorage.removeItem('wholamino_pending_segment');
     }
   });
@@ -2166,15 +2183,15 @@ async function saveResult(){
 function addFiber(g){ state.fiberLogged += g; render(); syncProfile(); }
 function addFluid(l){ state.fluidLogged += l; render(); syncProfile(); }
 
-let hydrationNudgeShownThisSession = false;
 function maybeShowHydrationNudge(){
-  // Shown once per app session (not on every render) — hydration is the one
-  // target nobody logs unless directly asked, since there's no natural
-  // moment (like a meal) that prompts it.
-  if(hydrationNudgeShownThisSession) return;
-  if(state.fluidLogged > 0) return;
+  // Fires on every login (not just the first), for as long as today's
+  // hydration target genuinely hasn't been met yet — previously this
+  // stopped after ANY nonzero amount was logged (even a single sip), and
+  // only ever showed once per session regardless of how many times someone
+  // logged back in the same day.
   if(!currentUser) return; // don't nudge someone browsing without an account yet
-  hydrationNudgeShownThisSession = true;
+  const targets = computeTargets();
+  if(state.fluidLogged >= targets.fluid) return;
   document.getElementById('hydrationNudgeOverlay').classList.add('show');
 }
 function submitHydrationNudge(){
@@ -2448,6 +2465,50 @@ function resetSession(){
   }
 }
 
+// Tracks the last date we confirmed the app was genuinely active, independent
+// of any login event. loadUserData()'s day-boundary logic only ever runs at
+// login — someone who just keeps the PWA open (very normal usage; most
+// people don't explicitly "sign out" of an app they use daily) could
+// otherwise cross midnight with today's counters never resetting at all,
+// not just the login prompts never re-firing.
+let lastKnownActiveDate = null;
+
+function checkDayRollover(){
+  if(!currentUser) return; // nothing to roll over for a guest session
+  const todayStr = new Date().toISOString().slice(0,10);
+  if(lastKnownActiveDate === null){
+    lastKnownActiveDate = todayStr; // first check this session — loadUserData() already set today up correctly at login
+    return;
+  }
+  if(lastKnownActiveDate === todayStr) return;
+
+  // A real day boundary was crossed without any login event firing. Same
+  // snapshot-then-reset pattern loadUserData()'s day-boundary branch already
+  // uses, just triggered here instead.
+  const targets = computeTargets();
+  sb.from('daily_metrics').upsert({
+    user_id: currentUser.id, date: lastKnownActiveDate,
+    protein_g: +state.todayMeals.reduce((s,m)=>s+m.usableG,0).toFixed(1),
+    fiber_g: +(state.todayMeals.reduce((s,m)=>s+(m.fiberG||0),0) + state.fiberLogged).toFixed(1),
+    fluid_l: state.fluidLogged || 0, sleep_h: state.sleepLogged || 0,
+    protein_target: targets.protein, fiber_target: targets.fiber, fluid_target: targets.fluid, sleep_target: targets.sleep,
+  }, { onConflict: 'user_id,date' }).then(({error}) => { if(error) console.error('Day-rollover snapshot failed:', error); });
+
+  state.fiberLogged = 0; state.fluidLogged = 0; state.sleepLogged = 0; state.trainingCompleted = false;
+  state.todayMeals = []; // yesterday's meals shouldn't keep counting toward "today"
+  syncProfile();
+  lastKnownActiveDate = todayStr;
+  render();
+  maybeShowSleepPrompt(); // re-check the login-style prompts, since they never got a chance to fire without an actual login
+}
+
+// Covers the common real-world case of reopening a PWA from the home
+// screen after the OS backgrounded it (not a full page reload, so none of
+// the login-flow code would otherwise run at all).
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') checkDayRollover();
+});
+
 function goTab(tab){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -2457,7 +2518,7 @@ function goTab(tab){
   document.getElementById(screenMap[tab]).classList.add('active');
   if(document.getElementById('tabBtn-'+tab)) document.getElementById('tabBtn-'+tab).classList.add('active');
   document.getElementById('whatsappSupportBtn').style.display = (tab === 'home') ? 'flex' : 'none';
-  if(tab==='home') renderNextMealBanner();
+  if(tab==='home'){ checkDayRollover(); renderNextMealBanner(); }
   if(tab==='history'){ renderHistory(); renderMealSlotSections(); }
   if(tab==='menu') renderMenu();
   if(tab==='audit') renderAuditPresets();
@@ -2546,24 +2607,7 @@ function setMobilityType(slot, type){
   }
 }
 
-let pendingBreakfastLog = null;
-let sleepGateResolvedToday = false;
-
 function logMealToSlot(name, recipe, slot, originalQuery, hadGap){
-  // Sleep has a lag effect — last night's sleep is entered the next day, and
-  // easy to forget since nothing else prompts for it. Catching it right
-  // before the first meal of the day (Breakfast) is the one moment it's
-  // guaranteed to still be relevant and not yet stale.
-  // Skip this entirely on day 1 — someone who just finished onboarding
-  // hasn't had a night as a WholAmino user yet, so "how did you sleep last
-  // night" is a nonsensical first interaction. This only makes sense from
-  // the second calendar day onward, once there's an actual previous night
-  // to ask about.
-  if(slot === 'Breakfast' && !state.sleepLogged && !sleepGateResolvedToday && daysSinceSignup() >= 1){
-    pendingBreakfastLog = { name, recipe, slot, originalQuery, hadGap };
-    showSleepGate();
-    return;
-  }
   const blend = recipe.map(([s,g])=>({source:s,grams:g}));
   const r = computeScoreFromGrams(blend);
   if(!r) return;
@@ -2572,20 +2616,31 @@ function logMealToSlot(name, recipe, slot, originalQuery, hadGap){
   state.pendingResult = entry;
   showResult(entry, false);
   goTab('result');
+  // Defense-in-depth, NOT a gate: the login/day-rollover checks cover the
+  // common cases, but someone who never backgrounds the app and never
+  // revisits Home could theoretically slip through both. This is a
+  // non-blocking safety net — the breakfast log above already completed
+  // normally either way; this just surfaces the same prompt on top if
+  // sleep is still genuinely missing (maybeShowSleepPrompt already handles
+  // the day-1 exclusion and "already logged" check correctly on its own).
+  if(slot === 'Breakfast') maybeShowSleepPrompt();
 }
 
-function showSleepGate(){
-  document.getElementById('sleepGateOverlay').classList.add('show');
-}
-
-function resumePendingBreakfastLog(){
-  document.getElementById('sleepGateOverlay').classList.remove('show');
-  sleepGateResolvedToday = true;
-  if(pendingBreakfastLog){
-    const p = pendingBreakfastLog;
-    pendingBreakfastLog = null;
-    logMealToSlot(p.name, p.recipe, p.slot, p.originalQuery, p.hadGap);
+function maybeShowSleepPrompt(){
+  // Moved here from a pre-breakfast gate — sleep has a lag effect (last
+  // night's sleep is entered the next day), so catching it right after
+  // login on Home is simpler and less intrusive than intercepting whatever
+  // someone was actually trying to do. Naturally shows once per day: it
+  // only fires while state.sleepLogged is still unset for today, so once
+  // someone answers it (or the day rolls over and resets it), it stops
+  // appearing until the next day's first login. Skipped entirely on day 1 —
+  // there's no actual previous night to ask about yet.
+  if(!currentUser) return;
+  if(state.sleepLogged || daysSinceSignup() < 1){
+    maybeShowHydrationNudge();
+    return;
   }
+  document.getElementById('sleepGateOverlay').classList.add('show');
 }
 
 function submitSleepGate(){
@@ -2596,11 +2651,14 @@ function submitSleepGate(){
   }
   state.sleepLogged = val;
   syncProfile();
-  resumePendingBreakfastLog();
+  render();
+  document.getElementById('sleepGateOverlay').classList.remove('show');
+  maybeShowHydrationNudge();
 }
 
 function skipSleepGate(){
-  resumePendingBreakfastLog();
+  document.getElementById('sleepGateOverlay').classList.remove('show');
+  maybeShowHydrationNudge();
 }
 
 function logFromTextSlot(slot){
