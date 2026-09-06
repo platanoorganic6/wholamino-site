@@ -208,7 +208,7 @@
   .landing-footer .links{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:10px;}
   .landing-footer .links span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.04em;cursor:pointer;text-decoration:underline;}
   .landing-footer .copyright{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);letter-spacing:0.03em;}
-  .login-error{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--claimed);text-align:center;margin-top:14px;display:none;padding:12px;background:var(--claimed-bg);border:2px solid var(--claimed);}
+  .login-error{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;color:var(--claimed);text-align:center;margin-top:14px;display:none;padding:14px;background:var(--claimed-bg);border:2px solid var(--claimed);}
   .login-error.show{display:block;}
 
   #screen-landing{display:none;min-height:100vh;background:var(--paper);}
@@ -3041,8 +3041,15 @@ function renderNextMealBanner(){
     // that used to be checked here.
     const proteinOk = proteinRemaining <= 0;
     const fiberOk = fiberRemaining <= 0;
-    const fluidOk = fluidRemaining <= 0;
-    const sleepOk = sleepRemaining <= 0;
+    // HOME (Working Professionals) doesn't track hydration/sleep at all —
+    // those pillars are hidden for this segment, and there's no visible way
+    // for a HOME user to even log them. Treating fluidOk/sleepOk as
+    // trivially true for HOME means completeness and gap messaging only
+    // ever consider what's actually visible and trackable for them,
+    // instead of permanently flagging a "gap" in something they have no
+    // way to address.
+    const fluidOk = state.segment === 'HOME' ? true : fluidRemaining <= 0;
+    const sleepOk = state.segment === 'HOME' ? true : sleepRemaining <= 0;
     const allOk = proteinOk && fiberOk && fluidOk && sleepOk;
 
     // Shared by both branches below — the goal chosen WITHIN a segment
@@ -3071,7 +3078,8 @@ function renderNextMealBanner(){
         GYM: `Today's protein, fiber, hydration, and sleep support whatever you're actually training for right now — the real benefit isn't today specifically, it's stacking days like this one.`,
         SPORTS: `Today gave your body what it needs to actually adapt from training, not just survive it — the real benefit isn't today specifically, it's consistency through the training block.`,
       };
-      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">Protein, fiber, hydration, and sleep all on target.</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}${goalContext ? `<br><br><em>${goalContext}</em>` : ''}</div></div>`;
+      const completeTitle = state.segment === 'HOME' ? 'Protein and fiber on target.' : 'Protein, fiber, hydration, and sleep all on target.';
+      el.innerHTML = `<div class="nextmeal-banner"><div class="nextmeal-eyebrow">TODAY — COMPLETE</div><div class="nextmeal-title">${completeTitle}</div><div class="nextmeal-target">${COMPLETE_MESSAGES[state.segment] || COMPLETE_MESSAGES.HOME}${goalContext ? `<br><br><em>${goalContext}</em>` : ''}</div></div>`;
       return;
     }
 
@@ -3474,18 +3482,19 @@ function render(){
   });
   document.getElementById('segBtnHome-RESTAURANT').classList.toggle('active', state.segment === 'RESTAURANT');
   document.getElementById('segBtnMenu-RESTAURANT').classList.toggle('active', state.segment === 'RESTAURANT');
-  // Once someone has committed to a personal segment via onboarding, only
-  // that segment remains visible — Restaurant is a separate B2B track with
-  // no overlap for a personal user, so it's hidden too once locked in.
-  // Deliberately switching later goes through Settings' "Reset my profile",
-  // not a casual always-visible switcher.
+  // Previously hid all other segments once locked in, requiring a trip to
+  // Settings' "Reset my profile" to switch — now all three personal
+  // segments stay visible and tappable directly from Home, with the active
+  // one highlighted. setSegment() already correctly triggers the
+  // segment-specific onboarding questions the first time someone switches
+  // into a new one, so no change needed there — this was purely a
+  // visibility restriction, not a functional requirement.
   const isLocked = state.onboarded.SPORTS || state.onboarded.GYM || state.onboarded.HOME;
   ['SPORTS','GYM','HOME'].forEach(s=>{
-    const showThis = !isLocked || s === state.segment;
     const homeBtn = document.getElementById('segBtnHome-'+s);
     const menuBtn = document.getElementById('segBtnMenu-'+s);
-    if(homeBtn) homeBtn.style.display = showThis ? 'block' : 'none';
-    if(menuBtn) menuBtn.style.display = showThis ? 'block' : 'none';
+    if(homeBtn) homeBtn.style.display = 'block';
+    if(menuBtn) menuBtn.style.display = 'block';
   });
   const showRestaurant = !isLocked || state.segment === 'RESTAURANT';
   document.getElementById('segBtnHome-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
@@ -3493,9 +3502,16 @@ function render(){
   document.getElementById('proteinVal').textContent = proteinSum;
   const greetingEl = document.getElementById('homeGreeting');
   if(greetingEl){
+    // HOME (Working Professionals) only tracks Protein and Fiber — Fluid and
+    // Sleep pillars are hidden for this segment (see isHomeSimple below),
+    // and the hydration/sleep nudges are already segment-gated to skip HOME
+    // too. This greeting was still unconditionally naming all four for
+    // every segment, mentioning targets a Working Professional never
+    // actually sees tracked anywhere in the app.
+    const trackedMetrics = state.segment === 'HOME' ? 'Protein & Fiber' : 'Protein, Fiber, Hydration & Sleep';
     greetingEl.textContent = state.name
-      ? `${state.name}, your daily Protein, Fiber, Hydration & Sleep targets are set based on your profile.`
-      : `Your daily Protein, Fiber, Hydration & Sleep targets are set based on your profile.`;
+      ? `${state.name}, your daily ${trackedMetrics} targets are set based on your profile.`
+      : `Your daily ${trackedMetrics} targets are set based on your profile.`;
   }
   document.getElementById('proteinTarget').textContent = targets.protein;
   document.getElementById('proteinBar').style.width = Math.min(100, proteinSum/targets.protein*100)+'%';
@@ -3577,13 +3593,11 @@ function render(){
   document.getElementById('targetFiberDisplay').textContent = targets.fiber+'g';
   document.getElementById('targetFluidDisplay').textContent = targets.fluid+'L';
 
-  // Same locking rule as the Home screen switcher: once committed to a
-  // personal segment, only that segment stays selectable here — Restaurant
-  // is hidden too, since it's a separate B2B track with no overlap for a
-  // personal user. These chips previously called setSegment() directly for
-  // all four options with zero gating — letting someone bypass the intended
-  // Settings → "Reset my profile" flow entirely, unlike the Home screen.
-  const visibleSegments = ['HOME','GYM','SPORTS'].filter(s => !isLocked || s === state.segment).concat(showRestaurant ? ['RESTAURANT'] : []);
+  // Now consistent with the Home screen switcher — all three personal
+  // segments stay visible and switchable directly, not just from here.
+  // Restaurant stays separately gated since it's a genuinely different B2B
+  // track with no overlap for a personal user.
+  const visibleSegments = ['HOME','GYM','SPORTS'].concat(showRestaurant ? ['RESTAURANT'] : []);
   const SEGMENT_CHIP_LABELS = { HOME: 'WORKING PROF.', GYM: 'GYM', SPORTS: 'SPORTS', RESTAURANT: 'RESTAURANT' };
   document.getElementById('segmentChips').innerHTML = visibleSegments.map(s=>
     `<div class="chip" style="${s===state.segment?'background:var(--ink);color:#fff;':''}" onclick="setSegment('${s}')">${SEGMENT_CHIP_LABELS[s]}</div>`
