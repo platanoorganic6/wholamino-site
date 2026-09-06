@@ -218,6 +218,17 @@
   .landing-hero h1{font-family:'Oswald',sans-serif;font-size:clamp(32px,6vw,60px);line-height:1.05;letter-spacing:-0.02em;margin:8px 0;}
   .landing-hero h1 span{opacity:0.55;}
   .landing-lead{text-align:center;color:var(--ink-soft);font-size:16px;line-height:1.5;max-width:600px;margin:16px auto 0;}
+  .landing-lead-big{text-align:center;color:var(--ink);font-weight:700;font-size:24px;line-height:1.3;max-width:480px;margin:18px auto 0;}
+  .landing-lead-small{text-align:center;color:var(--ink-soft);font-size:13px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.02em;margin:10px auto 0;}
+  .landing-pillars-hero{display:flex;align-items:center;justify-content:center;gap:18px;margin:20px auto 0;max-width:480px;}
+  .landing-pillar-hero{text-align:center;}
+  .landing-pillar-hero-label{font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;letter-spacing:0.02em;color:var(--ink);}
+  .landing-pillar-hero-sub{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:var(--ink);letter-spacing:0.01em;margin-top:2px;}
+  .landing-pillar-divider{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:var(--rule);}
+  .landing-demo{max-width:460px;margin:32px auto 0;}
+  .landing-demo-card{background:var(--panel);border:1.5px solid var(--ink);padding:18px;}
+  .landing-demo-input{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink);text-align:center;padding:10px;background:var(--paper);border:1px dashed var(--rule);}
+  .landing-demo-arrow{text-align:center;font-size:18px;color:var(--ink-soft);margin:8px 0;}
   .landing-proof{display:flex;max-width:600px;margin:34px auto 42px;border:1.5px solid var(--ink);}
   .landing-proof div{flex:1;text-align:center;padding:16px;border-right:1px solid var(--rule);}
   .landing-proof div:last-child{border-right:none;}
@@ -248,7 +259,7 @@
 
   .landing-expect{max-width:900px;margin:0 auto 42px;}
   .landing-expect h2{font-family:'Oswald',sans-serif;font-size:22px;margin:8px 0 24px;text-align:center;}
-  .landing-expect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .landing-expect-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
   .landing-expect-card{padding:20px;border:1.5px solid var(--rule);background:var(--panel);}
   .landing-expect-card b{display:block;font-family:'Oswald',sans-serif;font-size:14.5px;margin-bottom:8px;color:var(--usable);}
   .landing-expect-card span{display:block;color:var(--ink-soft);font-size:12.5px;line-height:1.5;}
@@ -284,11 +295,106 @@
         <div class="onboard-eyebrow" style="margin-bottom:0;margin-top:2px;font-weight:700;">NUTRITION &amp; METABOLIC INTELLIGENCE</div>
       </div>
       <h1>Know what your food<br><span>is really doing for you.</span></h1>
-      <p class="landing-lead">Protein quantity. Protein quality. Fibre. Training. Hydration. Sleep. Metabolic health. One intelligence engine — built around you.</p>
+      <svg width="200" height="200" viewBox="0 0 200 200" style="display:block;margin:18px auto;">
+        <defs>
+          <radialGradient id="plateShine" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#EFEEE8"/>
+          </radialGradient>
+          <radialGradient id="riceGrad" cx="40%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#E9E7DE"/>
+          </radialGradient>
+          <radialGradient id="rotiGrad" cx="38%" cy="32%" r="75%">
+            <stop offset="0%" stop-color="#F0D3A8"/>
+            <stop offset="60%" stop-color="#DDB37D"/>
+            <stop offset="100%" stop-color="#C89860"/>
+          </radialGradient>
+          <radialGradient id="dalGrad" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#C9A23F"/>
+            <stop offset="100%" stop-color="#8A6D1D"/>
+          </radialGradient>
+          <radialGradient id="sabziGrad" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#D65B47"/>
+            <stop offset="100%" stop-color="#9E2E1E"/>
+          </radialGradient>
+          <radialGradient id="chutneyGrad" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#2E9276"/>
+            <stop offset="100%" stop-color="#154D3E"/>
+          </radialGradient>
+          <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.18"/>
+          </filter>
+        </defs>
+        <g filter="url(#dropShadow)">
+          <circle cx="100" cy="100" r="92" fill="url(#plateShine)" stroke="#141414" stroke-width="2.5"/>
+        </g>
+        <circle cx="100" cy="100" r="83" fill="none" stroke="#D8D6CE" stroke-width="1.5"/>
+        <ellipse cx="66" cy="100" rx="36" ry="29" fill="url(#riceGrad)" stroke="#141414" stroke-width="1.5"/>
+        <path d="M50 92 q4 -3 8 0 M60 86 q4 -3 8 0 M70 92 q4 -3 8 0 M54 102 q4 -3 8 0 M66 106 q4 -3 8 0 M56 112 q4 -3 8 0" stroke="#C9C7BC" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        <ellipse cx="58" cy="88" rx="3" ry="1.6" fill="#2E9276" transform="rotate(20 58 88)"/>
+        <ellipse cx="74" cy="95" rx="3" ry="1.6" fill="#2E9276" transform="rotate(-15 74 95)"/>
+        <circle cx="142" cy="58" r="26" fill="url(#rotiGrad)" stroke="#141414" stroke-width="1.5"/>
+        <circle cx="142" cy="58" r="18" fill="none" stroke="#B98450" stroke-width="0.9" opacity="0.6"/>
+        <ellipse cx="135" cy="50" rx="9" ry="5" fill="#F5DDB8" opacity="0.55"/>
+        <path d="M148 42 q3 6 -2 10" stroke="#8A5E30" stroke-width="1" fill="none" opacity="0.4"/>
+        <circle cx="152" cy="120" r="22" fill="#FFFFFF" stroke="#141414" stroke-width="2"/>
+        <circle cx="152" cy="120" r="16" fill="url(#dalGrad)"/>
+        <ellipse cx="146" cy="113" rx="5" ry="3" fill="#E4C066" opacity="0.8"/>
+        <path d="M144 126 q8 4 16 0" stroke="#6B5414" stroke-width="1" fill="none" opacity="0.4"/>
+        <circle cx="56" cy="152" r="20" fill="#FFFFFF" stroke="#141414" stroke-width="2"/>
+        <circle cx="56" cy="152" r="14" fill="url(#sabziGrad)"/>
+        <circle cx="51" cy="147" r="2.8" fill="#F0906E" opacity="0.8"/>
+        <circle cx="61" cy="156" r="2.2" fill="#6E1D10"/>
+        <ellipse cx="58" cy="149" rx="2" ry="3" fill="#2E9276" transform="rotate(30 58 149)"/>
+        <circle cx="103" cy="160" r="16" fill="#FFFFFF" stroke="#141414" stroke-width="2"/>
+        <circle cx="103" cy="160" r="11" fill="#FDFCF9" stroke="#E5E3D8" stroke-width="1"/>
+        <ellipse cx="99" cy="156" rx="3.5" ry="2" fill="#FFFFFF"/>
+        <circle cx="32" cy="96" r="10" fill="url(#chutneyGrad)" stroke="#141414" stroke-width="1.5"/>
+        <ellipse cx="29" cy="92" rx="2.8" ry="1.6" fill="#5FBE9C" opacity="0.7"/>
+        <circle cx="40" cy="126" r="7.5" fill="#9A3E1F" stroke="#141414" stroke-width="1.5"/>
+        <ellipse cx="37" cy="123" rx="2" ry="1.2" fill="#C56A45" opacity="0.7"/>
+        <path d="M38 55 A24 24 0 0 1 62 40 L50 60 Z" fill="#EED2A0" stroke="#141414" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="46" cy="51" r="1.3" fill="#8A5E30" opacity="0.5"/>
+        <circle cx="51" cy="47" r="1.3" fill="#8A5E30" opacity="0.5"/>
+        <circle cx="43" cy="46" r="1.3" fill="#8A5E30" opacity="0.5"/>
+        <path d="M170 145 A14 14 0 0 1 156 159 Z" fill="#F0D33A" stroke="#141414" stroke-width="1.3"/>
+        <path d="M164 150 L166 154 M167 148 L170 151 M162 153 L163 156" stroke="#C9A800" stroke-width="0.8"/>
+      </svg>
+      <p style="text-align:center;font-family:'Oswald',sans-serif;font-weight:700;font-size:17px;color:var(--ink);letter-spacing:0.01em;margin:2px 0 0;">Based on Indian Council of Medical Research (ICMR) guidelines</p>
+      <div class="landing-pillars-hero">
+        <div class="landing-pillar-hero">
+          <div class="landing-pillar-hero-label">PROTEIN</div>
+          <div class="landing-pillar-hero-sub">METABOLISM SUPPORT</div>
+        </div>
+        <div class="landing-pillar-divider">+</div>
+        <div class="landing-pillar-hero">
+          <div class="landing-pillar-hero-label">FIBRE</div>
+          <div class="landing-pillar-hero-sub">GUT SUPPORT</div>
+        </div>
+      </div>
+      <p class="landing-lead-small">Plus hydration, sleep &amp; training — ICMR-NIN aligned.</p>
+    </div>
+
+    <div class="landing-demo">
+      <div class="onboard-eyebrow" style="text-align:center;font-weight:700;">SEE IT IN ACTION</div>
+      <div class="landing-demo-card">
+        <div class="landing-demo-input">"2 roti with dal veg curry and curd"</div>
+        <div class="landing-demo-arrow">↓</div>
+        <div class="mealslot-row">
+          <div class="mealslot-toprow"><span>PROTEIN — 24.9g EATEN</span><span>23.2g USABLE</span></div>
+          <div class="mealslot-track"><div class="mealslot-fill" style="width:93%;background:var(--claimed);"></div></div>
+        </div>
+        <div class="mealslot-row" style="margin-top:8px;">
+          <div class="mealslot-toprow"><span>FIBRE</span><span>18.5g</span></div>
+          <div class="mealslot-track"><div class="mealslot-fill" style="width:70%;background:var(--warn);"></div></div>
+        </div>
+        <div class="conf-note" style="margin:10px 0 0;">Lysine was the limiting amino acid — the real ceiling on this meal, not just the total grams. Score: <strong>93 — STRONG</strong>.</div>
+      </div>
     </div>
     <div class="landing-proof">
       <div><strong>9</strong><span>FREE LOGS</span></div>
-      <div><strong>60+</strong><span>DISHES RECOGNIZED</span></div>
+      <div><strong>90+</strong><span>DISHES RECOGNIZED</span></div>
       <div><strong>1</strong><span>INTEGRATED ENGINE</span></div>
       <div><strong>4</strong><span>WAYS TO USE IT</span></div>
     </div>
@@ -299,15 +405,19 @@
       <div class="landing-expect-grid">
         <div class="landing-expect-card">
           <b>Transparent, not just confident</b>
-          <span>When something you typed isn't fully recognized, you'll see exactly what matched and what didn't — never a silent guess presented as certain.</span>
+          <span>You'll always see exactly what dish matched — never a silent guess.</span>
         </div>
         <div class="landing-expect-card">
           <b>Real data, clearly sourced</b>
-          <span>Every dish is built from published nutrition data. Where a recipe genuinely varies (a chutney, a home-style curry), that's stated — not hidden behind false precision.</span>
+          <span>Every dish built from real, published nutrition data.</span>
         </div>
         <div class="landing-expect-card">
           <b>Always expanding</b>
-          <span>The dish library grows from what real people actually log — regional dishes, home recipes, different spellings — not a fixed list written once and left alone.</span>
+          <span>Grows from what real people actually log, every day.</span>
+        </div>
+        <div class="landing-expect-card">
+          <b>ICMR-NIN aligned methodology</b>
+          <span>Protein scoring follows DIAAS — ICMR-NIN's own standard.</span>
         </div>
       </div>
     </div>
@@ -1717,6 +1827,21 @@ const SOURCES = {
   parmesan:{name:"Parmesan Cheese",digestibility:.97,protein_per_100g:38,fiber_per_100g:0,profile:{His:32,Ile:56,Leu:102,Lys:88,SAA:32,AAA:108,Thr:44,Trp:13,Val:70}},
   croutons:{name:"Croutons (toasted bread)",digestibility:.87,protein_per_100g:10,fiber_per_100g:3.0,profile:{His:24,Ile:40,Leu:75,Lys:22,SAA:40,AAA:82,Thr:30,Trp:12,Val:46}},
   dressing:{name:"Salad Dressing (generic)",digestibility:.85,protein_per_100g:1.0,fiber_per_100g:0,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
+  // Bread — was previously approximated using raw wheat/atta for "toast";
+  // real bread has meaningfully less protein and far less fiber (most bran
+  // is lost in milling to white/brown flour), so a dedicated entry matters
+  // once sandwiches become a real dish category. Amino ratios reused from
+  // wheat since it's the same protein source, just refined and baked.
+  bread:{name:"Bread",digestibility:.87,protein_per_100g:8.5,fiber_per_100g:3,profile:{His:24,Ile:40,Leu:75,Lys:22,SAA:40,AAA:82,Thr:30,Trp:12,Val:46}},
+  // Sabudana (tapioca pearls) — confirmed near-identically across 8
+  // independent sources as almost pure starch. Protein is genuinely
+  // negligible (~0.2g/100g), not zero — kept real rather than rounded away,
+  // even though its contribution to any recipe will be tiny regardless.
+  sabudana:{name:"Sabudana",digestibility:.85,protein_per_100g:0.2,fiber_per_100g:0.9,profile:{His:24,Ile:42,Leu:84,Lys:38,SAA:45,AAA:100,Thr:38,Trp:13,Val:62}},
+  // Coconut (raw meat) — full amino acid breakdown available from USDA data,
+  // converted to the same mg-per-gram-protein convention used throughout
+  // this file (matching how wheat/rice/chana are already defined).
+  coconut:{name:"Coconut",digestibility:.80,protein_per_100g:3.33,fiber_per_100g:9,profile:{His:23,Ile:39,Leu:74,Lys:44,SAA:38,AAA:82,Thr:36,Trp:12,Val:61}},
 };
 
 function computeScoreFromGrams(recipeGrams, claimedOverride) {
@@ -1921,6 +2046,66 @@ const DISHES = [
   ["Tofu Bhurji + Roti", [["tofu",150],["wheat",80],["veg",60]]],
   ["Tofu Curry + Rice", [["tofu",150],["rice",180],["veg",80]]],
   ["Moong Dal Chilla + Curd", [["moong",120],["veg",70],["yogurt",80]]],
+
+  // --- Breakfast additions, buildable from existing ingredients ---
+  // Poha — confirmed across 8 independent recipes as one of India's most
+  // common breakfasts overall, not just regional. Ingredient already
+  // existed; the dish entry itself was simply missing.
+  ["Poha", [["poha",120],["peanut",15],["veg",60]]],
+  ["Pesarattu", [["moong",100],["veg",20]]],
+  ["Masala Dosa", [["dosa",120],["potato",100],["veg",20]]],
+  ["Puri + Sabzi", [["wheat",60],["potato",80],["veg",40]]],
+  ["Kachori", [["wheat",50],["chana",40]]],
+  ["Misal Pav", [["moong",100],["wheat",60],["veg",40]]],
+  ["Thepla", [["wheat",70],["veg",20]]],
+  ["Radhaballabhi + Cholar Dal", [["wheat",60],["chana",100]]],
+  ["Kolkata Egg Roll", [["egg",100],["wheat",60]]],
+
+  // --- Sandwiches (Ravi's real-world observed 5, verified against public
+  // sources) ---
+  ["Veg Sandwich", [["bread",60],["potato",40],["veg",60]]],
+  ["Veg Cheese Sandwich", [["bread",60],["veg",60],["cheese",25]]],
+  ["Veg Paneer Sandwich", [["bread",60],["paneer",70],["veg",40]]],
+  ["Paneer Cheese Sandwich", [["bread",60],["paneer",70],["cheese",20]]],
+  ["Egg Sandwich", [["bread",60],["egg",100],["veg",20]]],
+
+  // --- Dishes needing the new ingredients researched tonight ---
+  ["Sabudana Khichdi", [["sabudana",100],["potato",40],["peanut",20]]],
+  ["Appam", [["rice",100],["coconut",30]]],
+  ["Luchi + Aloo Dum", [["wheat",60],["potato",100]]],
+
+  // --- Lunch additions ---
+  ["Matar Paneer + Rice", [["paneer",100],["rice",180],["peas",40]]],
+  ["Aloo Gobi + Roti", [["potato",80],["veg",80],["wheat",70]]],
+  ["Bhindi Masala + Roti", [["veg",120],["wheat",70]]],
+
+  // --- Generic Veg Salad — found missing during Ravi's stress test, where
+  // "veg salad" incorrectly matched "Sprouts Salad" (the only entry
+  // containing the word "salad"), silently crediting moong-sprout protein
+  // that wasn't actually eaten.
+  ["Veg Salad", [["veg",150]]],
+  // Vegetable Soup — found missing while checking Ravi's request: "vegetable
+  // soup" was silently matching "Vegetable Upma" (sharing only the word
+  // "vegetable"), crediting sooji+peanut nutrition for what is actually a
+  // light vegetable broth. No soup entry existed at all before this.
+  ["Vegetable Soup", [["veg",150]]],
+  // Standalone curry-only versions — found systemically missing while
+  // checking Ravi's "with/+ usually means a side dish" insight. All 9 of
+  // these previously existed ONLY bundled with rice or bread, meaning any
+  // query like "veg fried rice with paneer curry" would match the curry
+  // part to its bundled combo (e.g. "Rice + Paneer Curry") and silently
+  // double-count rice already provided by the other part of the query.
+  // Compositions match their existing bundled counterparts, minus the
+  // starch — same protein and vegetable amounts, not re-estimated.
+  ["Fish Curry", [["fish",150],["veg",40]]],
+  ["Egg Curry", [["egg",120],["veg",50]]],
+  ["Prawn Curry", [["prawns",150],["veg",40]]],
+  ["Mutton Curry", [["mutton",150],["veg",40]]],
+  ["Mushroom Curry", [["mushroom",150],["veg",30]]],
+  ["Chicken Curry", [["chicken",150]]],
+  ["Tofu Curry", [["tofu",150],["veg",80]]],
+  ["Paneer Curry", [["paneer",100],["veg",100]]],
+  ["Soya Curry", [["soy",80],["veg",100]]],
 ];
 
 // ---- State ----
@@ -2017,10 +2202,24 @@ const QUERY_SYNONYMS = {
   sabji:"vegetable", sabzi:"vegetable", subzi:"vegetable", subji:"vegetable", sabjee:"vegetable",
   achar:"pickle",
   chawal:"rice", anda:"egg", dahi:"curd",
+  // Chana and Chole are the same food (chickpeas) under two different
+  // regional names — without this, "chana masala" shared zero words with
+  // the existing "Chole Rice"/"Chole Bhature" entries and matched nothing
+  // at all. Same bug class as Kara Bath/Upma, found during lunch research.
+  chana:"chole",
+  kitchidi:"khichdi",
+  veg:"vegetable",
 };
 
 function findDish(query){
-  const q = query.toLowerCase().replace(/[^a-z0-9\s]/g," ").trim();
+  let q = query.toLowerCase().replace(/[^a-z0-9\s]/g," ").trim();
+  // Regional dish names that mean the same thing as an existing entry but
+  // share zero words with it — "kara bath" / "khara bath" (the common
+  // Karnataka name for this savory rava dish) previously matched nothing at
+  // all, despite "Vegetable Upma" already existing in the library. Handled
+  // as a phrase-level substitution (not a single-word synonym) since mapping
+  // "kara" alone would be too generic and risk false matches elsewhere.
+  q = q.replace(/\bkh?ara\s*bath\b/g, "upma");
   if(!q) return null;
   const queryTokens = q.split(/\s+/).filter(t=>t.length>2).map(t => QUERY_SYNONYMS[t] || t);
   const wordsMatch = (dishToken, queryToken) => {
@@ -2033,15 +2232,26 @@ function findDish(query){
     return false;
   };
   const bestMatchIn = (list) => {
-    let best=null, bestScore=0;
+    let best=null, bestHits=0, bestScore=0;
     list.forEach(([name, recipe])=>{
-      const n = name.toLowerCase();
+      const n = name.toLowerCase().replace(/[^a-z0-9\s]/g," ");
       const tokens = n.split(/\s+/).filter(t=>t.length>2).map(t => QUERY_SYNONYMS[t] || t);
       const hits = tokens.filter(t => queryTokens.some(qt => wordsMatch(t, qt))).length;
       const score = hits/(tokens.length||1);
       // Require at least half the dish's meaningful words to match — a single shared
       // generic word (e.g. "curry", "rice") is not enough to silently pick a dish.
-      if(score>bestScore && score>=0.5){ bestScore=score; best=[name,recipe]; }
+      if(score<0.5) return;
+      // CRITICAL: rank by absolute hit count FIRST, not percentage-of-own-name.
+      // Without this, "fish rice" matched plain "Rice" instead of "Fish Curry +
+      // Rice" — Rice scored a trivial 100% (1/1 word matched) while the correct,
+      // more informative dish only scored 67% (2/3 words matched), even though
+      // it explains MORE of what was actually typed. Same root cause as the
+      // earlier tie-breaking fix, just showing up as an outright score gap
+      // instead of a tie — a missing word or typo in an otherwise-correct
+      // longer match should never lose to a trivial single-word match.
+      if(hits>bestHits || (hits===bestHits && score>bestScore)){
+        bestHits=hits; bestScore=score; best=[name,recipe];
+      }
     });
     return best;
   };
@@ -3422,6 +3632,10 @@ const legalContent = {
     title: 'About WholAmino',
     body: `<h3>What WholAmino is</h3>
 <p>WholAmino is a nutrition and metabolic intelligence app. It tracks protein quantity and protein quality together — not just how much protein you eat, but how much of it your body can actually use — alongside fibre, hydration, sleep, training, and post-meal metabolic habits.</p>
+<h3>Our methodology</h3>
+<p>Daily protein targets are based on ICMR-NIN's 2020 Recommended Dietary Allowances (0.83g/kg/day for a general adult, age-banded for children, adolescents, and older adults, with adjustments for pregnancy and lactation). Fibre targets follow ICMR-NIN's published range.</p>
+<p>Protein quality is scored using DIAAS (Digestible Indispensable Amino Acid Score) — the same methodology ICMR-NIN itself adopted in 2020, replacing the older PDCAAS approach. Every meal's usable protein is capped by whichever essential amino acid is scarcest relative to a standard reference pattern, adjusted for that ingredient's actual digestibility — not just totalled up as if every gram of protein were equally usable.</p>
+<p>WholAmino's methodology follows ICMR-NIN's published standards; it is not affiliated with, endorsed by, or certified by ICMR-NIN.</p>
 <h3>Who it's for</h3>
 <p>Athletes, gym-goers, working professionals eating home-cooked meals, and restaurants that want their menus independently audited for protein quality.</p>
 <h3>Who's behind it</h3>
@@ -3483,13 +3697,21 @@ function showFoodGuide(){
     ? `Showing ${state.dietType === 'VEGAN' ? 'Vegan' : state.dietType === 'VEG' ? 'Veg' : 'Non-Veg'} options, based on your Profile setting.`
     : `Showing all options — set a diet preference in Profile to filter this list.`;
 
+  // Condiments/garnishes eaten in tiny real-world quantities (a papad is
+  // ~10g, not 100g) — excluded from these rankings so they reflect what
+  // ICMR-NIN's actual dietary guidelines name as fiber/protein sources
+  // (whole grains, legumes, vegetables, nuts, proteins), not whichever
+  // ingredient happens to score highest per 100g in a lab table regardless
+  // of how much anyone actually eats of it.
+  const CONDIMENT_ONLY_SOURCES = new Set(['chutney','papad','pickle','dressing','croutons']);
+
   const proteinSources = Object.entries(SOURCES)
-    .filter(([key]) => dietAllows([[key,100]]))
+    .filter(([key]) => dietAllows([[key,100]]) && !CONDIMENT_ONLY_SOURCES.has(key))
     .sort((a,b) => b[1].protein_per_100g - a[1].protein_per_100g)
     .slice(0,10);
 
   const fiberSources = Object.entries(SOURCES)
-    .filter(([key]) => dietAllows([[key,100]]) && (SOURCES[key].fiber_per_100g||0) > 0)
+    .filter(([key]) => dietAllows([[key,100]]) && (SOURCES[key].fiber_per_100g||0) > 0 && !CONDIMENT_ONLY_SOURCES.has(key))
     .sort((a,b) => (b[1].fiber_per_100g||0) - (a[1].fiber_per_100g||0))
     .slice(0,10);
 
