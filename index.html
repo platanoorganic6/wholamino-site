@@ -1328,7 +1328,7 @@ async function detectUsualDish(slot){
   if(!sb || !currentUser) return null;
   const since = new Date(); since.setDate(since.getDate() - 7);
   const { data, error } = await sb.from('logged_meals')
-    .select('name, usable_g, fiber_g, logged_at')
+    .select('name, usable_g, fiber_g, limiting_aa, logged_at')
     .eq('user_id', currentUser.id)
     .eq('meal_slot', slot)
     .gte('logged_at', since.toISOString())
@@ -1338,18 +1338,22 @@ async function detectUsualDish(slot){
 
   // Group by exact dish name, counting DISTINCT DAYS (not raw log rows) —
   // logging the same thing twice in one sitting shouldn't inflate how
-  // "usual" it looks.
+  // "usual" it looks. Also tracks limiting_aa frequency per dish, since
+  // logged_meals already stores this on every single log — the top-up
+  // recommendation should target the SPECIFIC amino acid actually short in
+  // this real pattern, not just suggest "more protein" generically.
   const byName = {};
   const allDays = new Set();
   data.forEach(row => {
     const day = row.logged_at.slice(0,10);
     allDays.add(day);
-    if(!byName[row.name]) byName[row.name] = { days: new Set(), usableSum: 0, fiberSum: 0 };
+    if(!byName[row.name]) byName[row.name] = { days: new Set(), usableSum: 0, fiberSum: 0, aaCounts: {} };
     if(!byName[row.name].days.has(day)){
       byName[row.name].days.add(day);
       byName[row.name].usableSum += (row.usable_g || 0);
       byName[row.name].fiberSum += (row.fiber_g || 0);
     }
+    if(row.limiting_aa) byName[row.name].aaCounts[row.limiting_aa] = (byName[row.name].aaCounts[row.limiting_aa] || 0) + 1;
   });
 
   let best = null;
@@ -1360,7 +1364,14 @@ async function detectUsualDish(slot){
     // someone who genuinely varies their meals shouldn't get a random dish
     // called "usual" just because it happened to repeat once.
     if(count >= 2 && count / allDays.size >= 0.5){
-      if(!best || count > best.count) best = { name, count, avgUsable: stats.usableSum/count, avgFiber: stats.fiberSum/count };
+      if(!best || count > best.count){
+        // Most frequent limiting amino acid across this dish's real occurrences
+        let modeAA = null, modeCount = 0;
+        for(const [aa, c] of Object.entries(stats.aaCounts)){
+          if(c > modeCount){ modeAA = aa; modeCount = c; }
+        }
+        best = { name, count, avgUsable: stats.usableSum/count, avgFiber: stats.fiberSum/count, limitingAA: modeAA };
+      }
     }
   }
   return best;
@@ -1378,9 +1389,66 @@ async function loadUsualDishPatterns(){
 // specific dishes; this exists ONLY to top up whichever gap (protein or
 // fiber) is larger for a genuinely observed usual meal, not to recommend
 // a replacement.
-function complementaryTopup(gapType){
-  const diet = state.dietType;
+// Diet-aware food suggestions per limiting amino acid — used ONLY when a
+// genuine repeated pattern has been detected (detectUsualDish), never for a
+// single meal. That's the distinction from the "SUGGESTED FIX" card removed
+// earlier tonight: naming a specific amino acid fix for one isolated meal
+// was premature and unearned; doing it for a real, observed multi-day habit
+// is exactly the level of precision the app's DIAAS-based "quantity vs
+// quality" story is actually built on.
+const AA_TOPUP_FOODS = {
+  Lys: { VEGAN: 'chana dal or rajma', VEG: 'chana dal, rajma, or a cup of curd', NONVEG: 'chana dal, rajma, or a boiled egg' },
+  SAA: { VEGAN: 'rice or extra wheat/roti', VEG: 'rice, roti, or a bit of paneer', NONVEG: 'rice, roti, or a boiled egg' },
+  Thr: { VEGAN: 'soy chunks or tofu', VEG: 'curd or paneer', NONVEG: 'a boiled egg or chicken' },
+  Trp: { VEGAN: 'peanuts or soy', VEG: 'a cup of curd', NONVEG: 'a boiled egg or chicken' },
+  His: { VEGAN: 'moong dal or soy', VEG: 'a cup of curd', NONVEG: 'chicken or a boiled egg' },
+  Ile: { VEGAN: 'soy or peanuts', VEG: 'curd or paneer', NONVEG: 'a boiled egg or chicken' },
+  Leu: { VEGAN: 'soy or peanuts', VEG: 'paneer or curd', NONVEG: 'chicken or a boiled egg' },
+  AAA: { VEGAN: 'peanuts or soy', VEG: 'paneer', NONVEG: 'chicken or a boiled egg' },
+  Val: { VEGAN: 'soy or rice', VEG: 'curd or paneer', NONVEG: 'a boiled egg or chicken' },
+};
+
+function findComplementaryDish(gapAmount, limitingAA, excludeName){
+  // Recommends an actual DISH from the library (diet-filtered, correctly
+  // sized to the real gap) instead of a raw ingredient suggestion — and
+  // when a specific limiting amino acid is known, ranks candidates by their
+  // REAL ratio for that specific acid, not just overall protein. A dish can
+  // have plenty of total protein while still being weak in the one amino
+  // acid that's actually the bottleneck — this avoids recommending
+  // something that looks like a fix but doesn't actually address it.
+  const candidates = DISHES
+    .filter(([name, recipe]) => isSuggestable(name, recipe) && name !== excludeName)
+    .map(([name, recipe]) => {
+      const blend = recipe.map(([s,g])=>({source:s, grams:g}));
+      const r = computeScoreFromGrams(blend);
+      if(!r) return null;
+      return { name, recipe, usableG: r.usableG, aaRatio: (limitingAA && r.ratios) ? r.ratios[limitingAA] : null, diff: Math.abs(r.usableG - gapAmount) };
+    })
+    .filter(Boolean);
+  if(!candidates.length) return null;
+  if(limitingAA && candidates[0].aaRatio !== null){
+    candidates.sort((a,b) => b.aaRatio - a.aaRatio);
+    // Among dishes genuinely strong in that specific amino acid (within 85%
+    // of the best available), prefer whichever is closest in size to the
+    // actual gap — not just the single strongest, which might overshoot.
+    const topTier = candidates.filter(c => c.aaRatio >= candidates[0].aaRatio * 0.85);
+    topTier.sort((a,b) => a.diff - b.diff);
+    return topTier[0];
+  }
+  candidates.sort((a,b) => a.diff - b.diff);
+  return candidates[0];
+}
+
+function complementaryTopup(gapType, limitingAA){
+  const diet = state.dietType || 'NONVEG';
   if(gapType === 'protein'){
+    // When a genuine pattern has surfaced a specific limiting amino acid,
+    // recommend a food that actually addresses THAT gap — not just "more
+    // protein" in general, which could easily be more of the same limiting
+    // acid and not actually fix the completeness problem.
+    if(limitingAA && AA_TOPUP_FOODS[limitingAA]){
+      return AA_TOPUP_FOODS[limitingAA][diet] || AA_TOPUP_FOODS[limitingAA].NONVEG;
+    }
     if(diet === 'VEGAN') return 'a handful of roasted chana or peanuts';
     if(diet === 'VEG') return 'a boiled egg or a small cup of curd';
     return 'a boiled egg or a small portion of chicken';
@@ -3238,11 +3306,21 @@ function renderNextMealBanner(){
       </div>`;
     } else {
       const gapType = proteinGap > fiberGap ? 'protein' : 'fiber';
-      const topup = complementaryTopup(gapType);
+      // A complete dish for next time, not an ingredient add-on — targets
+      // the ACTUAL gap amount (not the full per-meal target), and when the
+      // limiting amino acid is known, ranks candidates by real strength in
+      // THAT specific acid rather than just overall protein closeness.
+      const gapAmount = gapType === 'protein' ? proteinGap : fiberGap;
+      const alternative = findComplementaryDish(gapAmount, gapType === 'protein' ? usual.limitingAA : null, usual.name);
+      const aaNote = (gapType === 'protein' && usual.limitingAA && AA_LABELS[usual.limitingAA])
+        ? ` (${AA_LABELS[usual.limitingAA]} specifically)` : '';
+      const suggestionLine = alternative
+        ? `Try <strong>${alternative.name}</strong> instead next time — ~${Math.round(alternative.usableG)}g protein, ${Math.round(alternative.fiberG||0)}g fiber, a closer fit for this meal.`
+        : `The library doesn't have a closer fit for your diet preference yet — worth checking back as it grows.`;
       el.innerHTML = `<div class="nextmeal-banner">
         <div class="nextmeal-eyebrow">NEXT UP — ${nextSlot.toUpperCase()}</div>
         <div class="nextmeal-title">You usually have ${usual.name} for ${nextSlot.toLowerCase()}.</div>
-        <div class="nextmeal-target">That gives ~${Math.round(usual.avgUsable)}g protein and ${Math.round(usual.avgFiber)}g fiber — a bit short on ${gapType} for this meal. Adding ${topup} would close most of the rest.</div>
+        <div class="nextmeal-target">That gives ~${Math.round(usual.avgUsable)}g protein and ${Math.round(usual.avgFiber)}g fiber — a bit short on ${gapType}${aaNote} for this meal. ${suggestionLine}</div>
       </div>`;
     }
     return;
