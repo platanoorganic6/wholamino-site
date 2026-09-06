@@ -2084,6 +2084,12 @@ const DISHES = [
   // containing the word "salad"), silently crediting moong-sprout protein
   // that wasn't actually eaten.
   ["Veg Salad", [["veg",150]]],
+  // Standalone Vada (medu vada, the lentil fritter) — "Medu Vada + Sambar"
+  // splits "vada" across two words (medu, vada), scoring only 33% for a bare
+  // "vada" query — below the match threshold. "Vada Pav" was the only entry
+  // clearing 50%, so plain vada was silently resolving to a potato-and-bread
+  // street snack instead of the actual lentil fritter.
+  ["Vada", [["moong",70]]],
   // Vegetable Soup — found missing while checking Ravi's request: "vegetable
   // soup" was silently matching "Vegetable Upma" (sharing only the word
   // "vegetable"), crediting sooji+peanut nutrition for what is actually a
@@ -3725,7 +3731,7 @@ function showFoodGuide(){
     })
     .filter(d => d && d.tier !== 'GOOD — ONE ADDITION AWAY' && d.fiberG >= 5)
     .sort((a,b) => (b.usableG + b.fiberG) - (a.usableG + a.fiberG))
-    .slice(0,8);
+    .slice(0,15);
 
   const listHTML = (items, render) => `<div style="margin-bottom:4px;">${items.map(render).join('')}</div>`;
 
@@ -3739,6 +3745,18 @@ function showFoodGuide(){
     <h3>Fiber-Rich Sources</h3>
     <p style="margin-bottom:8px;">Highest fiber content per 100g.</p>
     ${listHTML(fiberSources, ([key, s]) => `<div class="settings-row" style="cursor:default;"><span>${s.name}</span><span class="chev" style="color:var(--warn);font-weight:700;">${s.fiber_per_100g}g/100g</span></div>`)}
+
+    <h3>ICMR-NIN's Daily Plate (2024)</h3>
+    <p style="margin-bottom:8px;">The actual daily food-group targets ICMR-NIN recommends for a 2000 kcal diet — a reference point for balance across the day, not just single-dish scores.</p>
+    ${listHTML([
+      ['Cereals & Nutricereals', '250g'],
+      ['Pulses & Legumes', '85g'],
+      ['Vegetables (incl. green leafy)', '400g'],
+      ['Fruits', '100g'],
+      ['Milk/Curd', '300ml'],
+      ['Nuts & Seeds', '35g'],
+      ['Fats & Oils', '27g'],
+    ], ([label, val]) => `<div class="settings-row" style="cursor:default;"><span>${label}</span><span class="chev" style="color:var(--ink);font-weight:700;">${val}</span></div>`)}
 
     <h3>Complete Meals — Protein + Fiber Together</h3>
     <p style="margin-bottom:8px;">Dishes from the library that score well on BOTH usable protein and fiber in one go — genuinely well-rounded, not just protein-heavy.</p>
