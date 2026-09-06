@@ -208,7 +208,7 @@
   .landing-footer .links{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:10px;}
   .landing-footer .links span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.04em;cursor:pointer;text-decoration:underline;}
   .landing-footer .copyright{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);letter-spacing:0.03em;}
-  .login-error{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--claimed);text-align:center;margin-top:14px;display:none;}
+  .login-error{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--claimed);text-align:center;margin-top:14px;display:none;padding:12px;background:var(--claimed-bg);border:2px solid var(--claimed);}
   .login-error.show{display:block;}
 
   #screen-landing{display:none;min-height:100vh;background:var(--paper);}
@@ -1663,7 +1663,13 @@ function pickLandingSignupSegment(s){
 async function signInWithGoogle(){
   const errorEl = document.getElementById('landingError');
   errorEl.classList.remove('show');
-  if(!landingSignupSegment){ errorEl.textContent = "Pick a mode above first."; errorEl.classList.add('show'); return; }
+  if(!landingSignupSegment){
+    alert("Please select a mode first — Working Professionals, Gym/Yoga, Sports, or Restaurant — before signing in.");
+    errorEl.textContent = "Pick a mode above first.";
+    errorEl.classList.add('show');
+    document.querySelector('.segment-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   if(!sb){ errorEl.textContent = "Backend not configured yet."; errorEl.classList.add('show'); return; }
   // Same segment-persistence approach already proven for magic links: the
   // OAuth redirect leaves this page entirely (full navigation to Google and
@@ -1684,7 +1690,13 @@ async function landingContinue(){
   const statusEl = document.getElementById('landingStatus');
   const errorEl = document.getElementById('landingError');
   statusEl.classList.remove('show'); errorEl.classList.remove('show');
-  if(!landingSignupSegment){ errorEl.textContent = "Pick a mode above first."; errorEl.classList.add('show'); return; }
+  if(!landingSignupSegment){
+    alert("Please select a mode first — Working Professionals, Gym/Yoga, Sports, or Restaurant — before signing in.");
+    errorEl.textContent = "Pick a mode above first.";
+    errorEl.classList.add('show');
+    document.querySelector('.segment-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   const email = document.getElementById('landingEmail').value.trim();
   if(!email){ errorEl.textContent = "Enter an email first."; errorEl.classList.add('show'); return; }
   if(!sb){ errorEl.textContent = "Backend not configured yet — see supabase-schema.sql setup instructions."; errorEl.classList.add('show'); return; }
@@ -1707,8 +1719,10 @@ async function landingContinue(){
 
 function continueWithoutAccountFromLanding(){
   if(!landingSignupSegment){
+    alert("Please select a mode first — Working Professionals, Gym/Yoga, Sports, or Restaurant — before continuing.");
     document.getElementById('landingError').textContent = "Pick a mode above first.";
     document.getElementById('landingError').classList.add('show');
+    document.querySelector('.segment-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   enterApp();
@@ -1804,6 +1818,14 @@ const SOURCES = {
   oats:{name:"Oats",digestibility:.86,protein_per_100g:13.0,fiber_per_100g:10.0,profile:{His:23,Ile:40,Leu:66,Lys:38,SAA:29,AAA:78,Thr:32,Trp:10,Val:52}},
   potato:{name:"Potato",digestibility:.89,protein_per_100g:2.0,fiber_per_100g:2.2,profile:{His:20,Ile:39,Leu:66,Lys:38,SAA:30,AAA:78,Thr:31,Trp:10,Val:48}},
   peas:{name:"Green Peas",digestibility:.88,protein_per_100g:5.4,fiber_per_100g:5.1,profile:{His:25,Ile:43,Leu:68,Lys:60,SAA:28,AAA:77,Thr:36,Trp:10,Val:50}},
+  // Tomato — was previously unrecognized entirely (not even a synonym for
+  // "veg"), which is why "tomato soup" fell through to matching "Vegetable
+  // Soup" via the shared word "soup" alone. Real nutrition is meaningfully
+  // different from generic Mixed Vegetables (0.9g/1.2g here vs 2.5g/2.5g for
+  // the generic bucket) — lumping all vegetables together loses that
+  // real variation, same reasoning that already justified breaking out
+  // potato and peas as their own entries.
+  tomato:{name:"Tomato",digestibility:.82,protein_per_100g:0.9,fiber_per_100g:1.2,profile:{His:11,Ile:23,Leu:34,Lys:34,SAA:17,AAA:45,Thr:34,Trp:7,Val:23}},
   veg:{name:"Mixed Vegetables",digestibility:.85,protein_per_100g:2.5,fiber_per_100g:2.5,profile:{His:20,Ile:35,Leu:60,Lys:40,SAA:28,AAA:80,Thr:30,Trp:10,Val:44}},
   millet:{name:"Millet",digestibility:.83,protein_per_100g:3.5,fiber_per_100g:3.8,profile:{His:25,Ile:40,Leu:69,Lys:30,SAA:35,AAA:82,Thr:31,Trp:11,Val:53}},
   // Coconut chutney specifically (most common pairing with idli/dosa) — published
@@ -1878,7 +1900,7 @@ const INGREDIENT_ALIASES = {
   paneer:"paneer", tofu:"tofu", rice:"rice", dal:"toor", dhal:"toor", toor:"toor", toordal:"toor", chana:"chana", chickpea:"chana",
   moong:"moong", rajma:"rajma", curd:"yogurt", yogurt:"yogurt", egg:"egg", chicken:"chicken", fish:"fish",
   soy:"soy", soya:"soy", wheat:"wheat", atta:"wheat", peanut:"peanut", veg:"veg", vegetables:"veg", vegetable:"veg",
-  millet:"millet", besan:"besan", ragi:"ragi", oats:"oats", poha:"poha", potato:"potato", peas:"peas",
+  millet:"millet", besan:"besan", ragi:"ragi", oats:"oats", poha:"poha", potato:"potato", peas:"peas", tomato:"tomato", tomatoes:"tomato",
   cheese:"cheese", whey:"whey", casein:"casein", hemp:"hemp", pea:"pea", sooji:"sooji", idli:"idli", dosa:"dosa",
   lettuce:"lettuce", parmesan:"parmesan", crouton:"croutons", croutons:"croutons", dressing:"dressing", mayo:"dressing", mayonnaise:"dressing",
   mutton:"mutton", lamb:"mutton", goat:"mutton", prawns:"prawns", prawn:"prawns", shrimp:"prawns", mushroom:"mushroom", mushrooms:"mushroom",
@@ -2095,6 +2117,7 @@ const DISHES = [
   // "vegetable"), crediting sooji+peanut nutrition for what is actually a
   // light vegetable broth. No soup entry existed at all before this.
   ["Vegetable Soup", [["veg",150]]],
+  ["Tomato Soup", [["tomato",180]]],
   // Standalone curry-only versions — found systemically missing while
   // checking Ravi's "with/+ usually means a side dish" insight. All 9 of
   // these previously existed ONLY bundled with rice or bread, meaning any
