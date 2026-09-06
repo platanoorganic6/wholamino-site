@@ -35,7 +35,7 @@
 
   .app-header{display:flex;justify-content:space-between;align-items:center;padding:6px 0 14px;position:sticky;top:0;background:var(--paper);z-index:5;}
   .app-logo{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.02em;display:flex;align-items:center;gap:6px;}
-  .app-logo span{color:var(--usable);}
+  .app-logo span span{color:var(--usable);}
   .brand-mark{flex-shrink:0;}
   .landing-mark{display:block;margin:0 auto 14px;}
   .segment-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;background:var(--ink);color:#fff;padding:6px 10px;letter-spacing:0.05em;border:none;}
@@ -548,7 +548,7 @@
   <!-- HOME -->
   <div class="screen active" id="screen-home">
     <div class="app-header">
-      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>Whol<span>Amino</span></div>
+      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg><span>Whol<span>Amino</span></span></div>
       <span onclick="signOut()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.04em;cursor:pointer;text-decoration:underline;">SIGN OUT</span>
     </div>
     <div class="segment-switcher" id="segmentSwitcherHome">
@@ -747,7 +747,7 @@
   <!-- RESTAURANT: MENU -->
   <div class="screen" id="screen-menu">
     <div class="app-header">
-      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>Whol<span>Amino</span></div>
+      <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg><span>Whol<span>Amino</span></span></div>
     </div>
     <div class="segment-switcher" id="segmentSwitcherMenu">
       <button class="segment-btn" id="segBtnMenu-HOME" onclick="setSegment('HOME')">WORK PROF</button>
