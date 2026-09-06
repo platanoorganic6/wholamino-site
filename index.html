@@ -211,7 +211,7 @@
   .login-error{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;color:var(--claimed);text-align:center;margin-top:14px;display:none;padding:14px;background:var(--claimed-bg);border:2px solid var(--claimed);}
   .login-error.show{display:block;}
 
-  #screen-landing{display:none;min-height:100vh;background:var(--paper);}
+  #screen-landing{display:none;min-height:100vh;background:#C4D7E0;}
   #screen-landing.active{display:block;}
   .landing-wrap{max-width:1080px;margin:0 auto;padding:42px 22px 70px;}
   .landing-hero{text-align:center;max-width:820px;margin:auto;}
@@ -549,6 +549,7 @@
   <div class="screen active" id="screen-home">
     <div class="app-header">
       <div class="app-logo"><svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="5" fill="var(--claimed)"/><circle cx="16" cy="16" r="5" fill="var(--usable)"/><line x1="8" y1="8" x2="16" y2="16" stroke="var(--ink)" stroke-width="1.5"/></svg>Whol<span>Amino</span></div>
+      <span onclick="signOut()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:0.04em;cursor:pointer;text-decoration:underline;">SIGN OUT</span>
     </div>
     <div class="segment-switcher" id="segmentSwitcherHome">
       <button class="segment-btn" id="segBtnHome-HOME" onclick="setSegment('HOME')">WORK PROF</button>
@@ -1749,6 +1750,17 @@ function continueWithoutAccountFromLanding(){
   // Calling showOnboarding('RESTAURANT') directly here would throw, since
   // Restaurant has no onboarding-sheet content defined at all.
   setSegment(landingSignupSegment);
+}
+
+async function signOut(){
+  if(!confirm("Sign out of WholAmino?")) return;
+  if(sb) await sb.auth.signOut();
+  // Full reload to the base URL rather than manually resetting dozens of
+  // state variables — guarantees a completely clean slate with zero risk
+  // of stale data (today's meals, segment, targets) bleeding into whatever
+  // comes next, whether that's the same person signing back in or someone
+  // else on a shared device.
+  window.location.href = window.location.origin + window.location.pathname;
 }
 
 async function checkAuthAndInit(){
@@ -3157,7 +3169,7 @@ function renderNextMealBanner(){
       ].filter(g => !g.ok).sort((a,b) => b.pct - a.pct);
       const topGap = gaps[0];
       el.innerHTML = `<div class="nextmeal-banner">
-        <div class="nextmeal-eyebrow">DAY ${daysSinceSignup()} — GETTING STARTED</div>
+        <div class="nextmeal-eyebrow">DAY ${Math.floor(daysSinceSignup())+1} — GETTING STARTED</div>
         <div class="nextmeal-title">A gap here and there is completely normal right now.</div>
         <div class="nextmeal-target">
           You're still finding your baseline — that's the whole point of these first few days. I'm not here to judge today's numbers, just to help you see them clearly.<br><br>
