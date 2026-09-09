@@ -612,7 +612,7 @@
       </div>
       <div class="pillar" style="background:var(--warn-bg);text-align:center;">
         <div class="lbl">GUT SCORE</div>
-        <div class="val" style="font-size:34px;"><span id="gutScoreVal">0</span>%</div>
+        <div class="val" style="font-size:34px;"><span id="gutScoreVal">0%</span></div>
         <div class="of" id="gutScoreSub">of daily fiber target</div>
         <div class="pillar-bar"><div class="pillar-fill" id="gutScoreBar" style="width:0%;background:var(--warn);"></div></div>
       </div>
@@ -3849,7 +3849,7 @@ function render(){
     document.getElementById('gutScoreBar').style.width = '0%';
   } else {
     const gutScorePct = targets.fiber > 0 ? Math.round(Math.min(999, (fiberSum / targets.fiber) * 100)) : 0;
-    document.getElementById('gutScoreVal').textContent = gutScorePct;
+    document.getElementById('gutScoreVal').textContent = gutScorePct + '%';
     document.getElementById('gutScoreSub').textContent = 'of daily fiber target';
     document.getElementById('gutScoreBar').style.width = Math.min(100, gutScorePct) + '%';
   }
