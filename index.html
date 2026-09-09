@@ -605,10 +605,10 @@
         <div class="pillar-bar"><div class="pillar-fill" id="sleepBar" style="width:0%;background:#5B6FA8;"></div></div>
         <div class="pillar-add"><input type="number" step="0.5" id="sleepInput" placeholder="hrs" style="width:100%;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;" oninput="setSleep(this.value)"></div>
       </div>
-      <div class="pillar" id="metabolismScoreCard" style="display:none;background:var(--claimed-bg);text-align:center;">
+      <div class="pillar" id="metabolismScoreCard" style="background:var(--claimed-bg);text-align:center;">
         <div class="lbl">METABOLISM SCORE</div>
         <div class="val" style="font-size:34px;" id="dailyScoreVal">—</div>
-        <div class="of" style="font-weight:700;" id="dailyScoreTier"></div>
+        <div class="of" style="font-weight:700;" id="dailyScoreTier">LOG A MEAL TO SEE THIS</div>
       </div>
       <div class="pillar" style="background:var(--warn-bg);text-align:center;">
         <div class="lbl">GUT SCORE</div>
@@ -3388,8 +3388,16 @@ const PROGRESS_METRICS = {
 function switchProgressTab(metric){
   if(!progressCache) return;
   renderProgressMetric(metric);
+  // Sets the visual highlight directly here, in the one place that
+  // actually knows which tab is now active — the previous approach split
+  // this across two separate mechanisms (a CSS class with no matching style
+  // rule, plus a separate addEventListener elsewhere), which is exactly the
+  // kind of split-source-of-truth setup that silently breaks.
   document.querySelectorAll('.progress-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.metric === metric);
+    const active = btn.dataset.metric === metric;
+    btn.classList.toggle('active', active);
+    btn.style.background = active ? 'var(--ink)' : 'var(--panel)';
+    btn.style.color = active ? '#fff' : 'var(--ink)';
   });
 }
 
@@ -3519,19 +3527,6 @@ async function renderProgress(){
     <div id="progressMetricBody"></div>
   `;
   renderProgressMetric('protein');
-
-  // Style toggle for active/inactive tabs, since the buttons are built with
-  // inline styles above (matching this file's existing pattern) rather than
-  // a new CSS class system just for this.
-  document.querySelectorAll('.progress-tab').forEach(btn => {
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('.progress-tab').forEach(b => {
-        const active = b === this;
-        b.style.background = active ? 'var(--ink)' : 'var(--panel)';
-        b.style.color = active ? '#fff' : 'var(--ink)';
-      });
-    });
-  });
 
   const proteinChartData = allDays.filter(d=>d.logged.protein).map(d => ({ date: d.dateStr, actual: d.value.protein, target: targets.protein }));
   const fiberChartData = allDays.filter(d=>d.logged.fiber).map(d => ({ date: d.dateStr, actual: d.value.fiber, target: targets.fiber }));
@@ -3815,7 +3810,10 @@ function render(){
   const scoreCard = document.getElementById('metabolismScoreCard');
   if(scoreCard){
     if(state.todayMeals.length === 0){
-      scoreCard.style.display = 'none';
+      document.getElementById('dailyScoreVal').textContent = '—';
+      document.getElementById('dailyScoreVal').style.color = 'var(--ink)';
+      document.getElementById('dailyScoreTier').textContent = 'LOG A MEAL TO SEE THIS';
+      document.getElementById('dailyScoreTier').style.color = 'var(--ink-soft)';
     } else {
       const avgScore = Math.round(state.todayMeals.reduce((s,m)=>s+(m.score||0),0) / state.todayMeals.length);
       const tier = tierForScore(avgScore);
@@ -3824,7 +3822,6 @@ function render(){
       document.getElementById('dailyScoreVal').style.color = tierColor;
       document.getElementById('dailyScoreTier').textContent = tier;
       document.getElementById('dailyScoreTier').style.color = tierColor;
-      scoreCard.style.display = 'block';
     }
   }
 
