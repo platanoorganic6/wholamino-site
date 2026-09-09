@@ -613,7 +613,7 @@
       <div class="pillar" style="background:var(--warn-bg);text-align:center;">
         <div class="lbl">GUT SCORE</div>
         <div class="val" style="font-size:34px;"><span id="gutScoreVal">0</span>%</div>
-        <div class="of">of daily fiber target</div>
+        <div class="of" id="gutScoreSub">of daily fiber target</div>
         <div class="pillar-bar"><div class="pillar-fill" id="gutScoreBar" style="width:0%;background:var(--warn);"></div></div>
       </div>
     </div>
@@ -3837,9 +3837,22 @@ function render(){
   // do). Ties to the "Fibre for gut support" branding already established,
   // reusing the exact same fiberSum/target already computed for the Fiber
   // pillar rather than a second, parallel calculation.
-  const gutScorePct = targets.fiber > 0 ? Math.round(Math.min(999, (fiberSum / targets.fiber) * 100)) : 0;
-  document.getElementById('gutScoreVal').textContent = gutScorePct;
-  document.getElementById('gutScoreBar').style.width = Math.min(100, gutScorePct) + '%';
+  // Same consistency fix as Metabolism Score — showing "0%" when literally
+  // nothing has been logged yet reads as "you hit 0% of target" rather than
+  // "you haven't started," which is a different, more discouraging message
+  // than what's actually true. Checks the same underlying data (todayMeals
+  // + manually-added fiber) that already feeds the Fiber pillar itself.
+  const hasFiberData = state.todayMeals.length > 0 || state.fiberLogged > 0;
+  if(!hasFiberData){
+    document.getElementById('gutScoreVal').textContent = '—';
+    document.getElementById('gutScoreSub').textContent = 'LOG A MEAL TO SEE THIS';
+    document.getElementById('gutScoreBar').style.width = '0%';
+  } else {
+    const gutScorePct = targets.fiber > 0 ? Math.round(Math.min(999, (fiberSum / targets.fiber) * 100)) : 0;
+    document.getElementById('gutScoreVal').textContent = gutScorePct;
+    document.getElementById('gutScoreSub').textContent = 'of daily fiber target';
+    document.getElementById('gutScoreBar').style.width = Math.min(100, gutScorePct) + '%';
+  }
 
   document.getElementById('fluidVal').textContent = state.fluidLogged.toFixed(1);
   document.getElementById('fluidTarget').textContent = targets.fluid;
