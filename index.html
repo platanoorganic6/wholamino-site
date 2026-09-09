@@ -2562,6 +2562,10 @@ async function saveResult(){
     alert(`${reason} Choose HABIT (₹299/30 days) or TRANSFORM (₹799/90 days) in Profile to keep tracking.`);
     goTab('profile');
     render();
+    setTimeout(() => {
+      const cards = document.getElementById('programCards');
+      if(cards) cards.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
     return;
   }
   const entry = state.pendingResult;
