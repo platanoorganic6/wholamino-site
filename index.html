@@ -564,12 +564,6 @@
     <div id="expiryWarningBanner" style="display:none;"></div>
     <div id="homeGreeting" style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;"></div>
 
-    <div id="dailyScoreCard" style="display:none;background:var(--panel);border:2px solid var(--ink);padding:16px;margin-bottom:14px;text-align:center;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.06em;margin-bottom:4px;">METABOLISM SCORE</div>
-      <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:56px;line-height:1;" id="dailyScoreVal">—</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;margin-top:4px;" id="dailyScoreTier"></div>
-    </div>
-
     <div class="pillars">
       <div class="pillar" style="background:var(--claimed-bg);grid-column:span 2;">
         <div class="lbl">PROTEIN — EATEN VS. USABLE</div>
@@ -611,9 +605,14 @@
         <div class="pillar-bar"><div class="pillar-fill" id="sleepBar" style="width:0%;background:#5B6FA8;"></div></div>
         <div class="pillar-add"><input type="number" step="0.5" id="sleepInput" placeholder="hrs" style="width:100%;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;" oninput="setSleep(this.value)"></div>
       </div>
-      <div class="pillar" style="background:var(--warn-bg);">
+      <div class="pillar" id="metabolismScoreCard" style="display:none;background:var(--claimed-bg);text-align:center;">
+        <div class="lbl">METABOLISM SCORE</div>
+        <div class="val" style="font-size:34px;" id="dailyScoreVal">—</div>
+        <div class="of" style="font-weight:700;" id="dailyScoreTier"></div>
+      </div>
+      <div class="pillar" style="background:var(--warn-bg);text-align:center;">
         <div class="lbl">GUT SCORE</div>
-        <div class="val"><span id="gutScoreVal">0</span>%</div>
+        <div class="val" style="font-size:34px;"><span id="gutScoreVal">0</span>%</div>
         <div class="of">of daily fiber target</div>
         <div class="pillar-bar"><div class="pillar-fill" id="gutScoreBar" style="width:0%;background:var(--warn);"></div></div>
       </div>
@@ -629,7 +628,6 @@
     <div class="log-box" style="padding:10px;">
       <button class="log-send" style="margin-top:0;" onclick="goTab('history')">LOG A MEAL — BREAKFAST, LUNCH OR DINNER →</button>
     </div>
-    <button class="log-send" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);margin-bottom:14px;" onclick="goTab('progress')">VIEW 30-DAY PROGRESS →</button>
     <button class="log-send" style="background:var(--panel);color:var(--ink);border:1.5px solid var(--ink);margin-bottom:14px;" onclick="showFoodGuide()">FOOD &amp; DISH GUIDE →</button>
     <div class="section-lbl">TODAY, AT A GLANCE</div>
     <div id="todaySummary"></div>
@@ -854,6 +852,7 @@ yogurt 40"></textarea>
   <div class="tabbar" id="tabbarPersonal">
     <button class="tab active" id="tabBtn-home" onclick="goTab('home')"><div class="tab-icon">◆</div><span class="tab-lbl">HOME</span></button>
     <button class="tab" id="tabBtn-history" onclick="goTab('history')"><div class="tab-icon">≡</div><span class="tab-lbl">MEALS</span></button>
+    <button class="tab" id="tabBtn-progress" onclick="goTab('progress')"><div class="tab-icon">▲</div><span class="tab-lbl">PROGRESS</span></button>
     <button class="tab" id="tabBtn-profile" onclick="goTab('profile')"><div class="tab-icon">●</div><span class="tab-lbl">PROFILE</span></button>
   </div>
   <div class="tabbar" id="tabbarRestaurant" style="display:none;">
@@ -3813,7 +3812,7 @@ function render(){
   // reuses exactly what was already scored per meal rather than introducing
   // a second, parallel calculation that could drift from the per-meal numbers
   // shown elsewhere in the app.
-  const scoreCard = document.getElementById('dailyScoreCard');
+  const scoreCard = document.getElementById('metabolismScoreCard');
   if(scoreCard){
     if(state.todayMeals.length === 0){
       scoreCard.style.display = 'none';
