@@ -565,7 +565,7 @@
     <div id="homeGreeting" style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;"></div>
 
     <div id="dailyScoreCard" style="display:none;background:var(--panel);border:2px solid var(--ink);padding:16px;margin-bottom:14px;text-align:center;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.06em;margin-bottom:4px;">TODAY'S PROTEIN SCORE</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.06em;margin-bottom:4px;">METABOLISM SCORE</div>
       <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:56px;line-height:1;" id="dailyScoreVal">—</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;margin-top:4px;" id="dailyScoreTier"></div>
     </div>
@@ -610,6 +610,12 @@
         <div class="of">of <span id="sleepTarget">8</span>h</div>
         <div class="pillar-bar"><div class="pillar-fill" id="sleepBar" style="width:0%;background:#5B6FA8;"></div></div>
         <div class="pillar-add"><input type="number" step="0.5" id="sleepInput" placeholder="hrs" style="width:100%;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;" oninput="setSleep(this.value)"></div>
+      </div>
+      <div class="pillar" style="background:var(--warn-bg);">
+        <div class="lbl">GUT SCORE</div>
+        <div class="val"><span id="gutScoreVal">0</span>%</div>
+        <div class="of">of daily fiber target</div>
+        <div class="pillar-bar"><div class="pillar-fill" id="gutScoreBar" style="width:0%;background:var(--warn);"></div></div>
       </div>
     </div>
     <div id="nextMealBanner"></div>
@@ -3830,6 +3836,14 @@ function render(){
   document.getElementById('fiberVal').textContent = fiberSum;
   document.getElementById('fiberTarget').textContent = targets.fiber;
   document.getElementById('fiberBar').style.width = Math.min(100, fiberSum/targets.fiber*100)+'%';
+  // Gut Score — a straightforward fiber-target percentage, not a claim about
+  // measuring actual gut microbiome activity (which this app has no way to
+  // do). Ties to the "Fibre for gut support" branding already established,
+  // reusing the exact same fiberSum/target already computed for the Fiber
+  // pillar rather than a second, parallel calculation.
+  const gutScorePct = targets.fiber > 0 ? Math.round(Math.min(999, (fiberSum / targets.fiber) * 100)) : 0;
+  document.getElementById('gutScoreVal').textContent = gutScorePct;
+  document.getElementById('gutScoreBar').style.width = Math.min(100, gutScorePct) + '%';
 
   document.getElementById('fluidVal').textContent = state.fluidLogged.toFixed(1);
   document.getElementById('fluidTarget').textContent = targets.fluid;
