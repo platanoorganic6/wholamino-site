@@ -3371,19 +3371,68 @@ function renderNextMealBanner(){
   `;
 }
 
-function showDayDetail(index){
-  // Reads straight from the cell's own data attributes rather than keeping
-  // a separate global copy of the days array in sync — one less thing that
-  // could drift out of date with what's actually rendered.
-  const cells = document.querySelectorAll('#progressBody [data-date]');
+let progressCache = null; // cached per screen-open so tab switches don't re-fetch
+
+const PROGRESS_METRICS = {
+  protein: { label: 'PROTEIN', unit: 'g', decimals: 0, color: 'var(--claimed)' },
+  fiber:   { label: 'FIBER',   unit: 'g', decimals: 0, color: 'var(--warn)' },
+  fluid:   { label: 'HYDRATION', unit: 'L', decimals: 1, color: 'var(--usable)' },
+  sleep:   { label: 'SLEEP',   unit: 'h', decimals: 1, color: '#5B6FA8' },
+};
+
+function switchProgressTab(metric){
+  if(!progressCache) return;
+  renderProgressMetric(metric);
+  document.querySelectorAll('.progress-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.metric === metric);
+  });
+}
+
+function renderProgressMetric(metric){
+  const { allDays, targets } = progressCache;
+  const m = PROGRESS_METRICS[metric];
+  const key = metric; // 'protein' | 'fiber' | 'fluid' | 'sleep'
+  const targetKey = metric + 'Target';
+
+  const relevantDays = allDays.filter(d => d.logged[key]);
+  const daysHit = relevantDays.filter(d => d.hit[key]).length;
+  let streak = 0;
+  for(let i=allDays.length-1; i>=0; i--){
+    if(allDays[i].hit[key]) streak++; else break;
+  }
+  const avg = relevantDays.length ? (relevantDays.reduce((s,d)=>s+d.value[key],0) / relevantDays.length).toFixed(m.decimals) : '0';
+
+  const container = document.getElementById('progressMetricBody');
+  container.innerHTML = `
+    <div class="week-stats">
+      <div class="week-stat"><b style="color:var(--usable);">${daysHit}</b><span>DAYS HIT TARGET</span></div>
+      <div class="week-stat"><b style="color:var(--warn);">${streak}</b><span>DAY STREAK</span></div>
+      <div class="week-stat"><b>${avg}${m.unit}</b><span>AVG ${m.label}/DAY</span></div>
+    </div>
+    <div class="conf-note" style="margin-bottom:14px;">Compared against your CURRENT target. If your profile changed during this window, earlier days are still shown against today's target, not what applied at the time.${key==='fluid'||key==='sleep' ? " Today's number only joins this view once the day rolls over — hydration/sleep are archived at day-end, not live." : ''}</div>
+    <div class="section-lbl">DAY BY DAY — ${m.label}</div>
+    <div style="background:var(--panel);border:2px solid var(--ink);padding:14px;text-align:center;margin-bottom:8px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.04em;" id="dayDetailLabel">TAP A DAY BELOW</div>
+      <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:44px;line-height:1.2;" id="dayDetailVal">—</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:8px;">
+      ${allDays.map((d,i) => `<div onclick="showDayDetail(${i},'${key}')" data-date="${d.dateStr}" data-value="${d.value[key]}" data-unit="${m.unit}" data-logged="${d.logged[key]}" style="aspect-ratio:1;cursor:pointer;background:${d.hit[key]?'var(--usable)':d.logged[key]?'var(--warn)':'#EDECE6'};"></div>`).join('')}
+    </div>
+    <div class="conf-note">Green = hit target · Amber = logged, below target · Gray = not logged. Tap any square for that day's exact number.</div>
+  `;
+}
+
+function showDayDetail(index, metric){
+  const cells = document.querySelectorAll('#progressMetricBody [data-date]');
   const cell = cells[index];
   if(!cell) return;
   const date = cell.getAttribute('data-date');
-  const protein = cell.getAttribute('data-protein');
+  const value = cell.getAttribute('data-value');
+  const unit = cell.getAttribute('data-unit');
   const logged = cell.getAttribute('data-logged') === 'true';
   const label = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   document.getElementById('dayDetailLabel').textContent = label;
-  document.getElementById('dayDetailVal').textContent = logged ? protein + 'g' : 'Not logged';
+  document.getElementById('dayDetailVal').textContent = logged ? value + unit : 'Not logged';
 }
 
 async function renderProgress(){
@@ -3399,69 +3448,88 @@ async function renderProgress(){
     return;
   }
   const targets = computeTargets(); // uses today's target as an approximation across the whole window
+  const dailyMetrics = await loadDailyMetrics();
+  const dmByDate = {};
+  dailyMetrics.forEach(d => { dmByDate[d.date] = d; });
 
-  const byDay = {};
+  const byDayMeals = {};
   meals.forEach(m => {
     const dateStr = new Date(m.logged_at).toISOString().slice(0,10);
-    if(!byDay[dateStr]) byDay[dateStr] = { protein: 0, fiber: 0 };
-    byDay[dateStr].protein += m.usable_g || 0;
-    byDay[dateStr].fiber += m.fiber_g || 0;
+    if(!byDayMeals[dateStr]) byDayMeals[dateStr] = { protein: 0, fiber: 0 };
+    byDayMeals[dateStr].protein += m.usable_g || 0;
+    byDayMeals[dateStr].fiber += m.fiber_g || 0;
   });
 
-  const days = [];
+  const todayStr = new Date().toISOString().slice(0,10);
+  const allDays = [];
   for(let i=29;i>=0;i--){
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().slice(0,10);
-    const data = byDay[dateStr];
-    days.push({
+    const isToday = dateStr === todayStr;
+    const dm = dmByDate[dateStr];
+    const mealData = byDayMeals[dateStr];
+
+    // Protein/fiber: live-computed for today (daily_metrics won't have
+    // today's snapshot yet), archived daily_metrics for past days if
+    // present, else reconstructed from logged_meals directly.
+    const proteinVal = isToday ? (mealData ? mealData.protein : 0) : (dm ? dm.protein_g : (mealData ? mealData.protein : 0));
+    const fiberVal = isToday ? (mealData ? mealData.fiber : 0) : (dm ? dm.fiber_g : (mealData ? mealData.fiber : 0));
+    // Fluid/sleep: ONLY ever available from the daily_metrics archive,
+    // which only exists once a day has actually rolled over — today never
+    // has an entry here yet, by design, not a bug.
+    const fluidVal = dm ? dm.fluid_l : 0;
+    const sleepVal = dm ? dm.sleep_h : 0;
+
+    const proteinLogged = isToday ? !!mealData : !!dm || !!mealData;
+    const fiberLogged = proteinLogged;
+    const fluidLogged = !isToday && !!dm;
+    const sleepLogged = !isToday && !!dm;
+
+    allDays.push({
       dateStr,
-      logged: !!data,
-      proteinHit: data ? data.protein >= targets.protein : false,
-      protein: data ? +data.protein.toFixed(1) : 0,
+      logged: { protein: proteinLogged, fiber: fiberLogged, fluid: fluidLogged, sleep: sleepLogged },
+      value: {
+        protein: +(+proteinVal).toFixed(0), fiber: +(+fiberVal).toFixed(0),
+        fluid: +(+fluidVal).toFixed(1), sleep: +(+sleepVal).toFixed(1),
+      },
+      hit: {
+        protein: proteinVal >= targets.protein, fiber: fiberVal >= targets.fiber,
+        fluid: fluidLogged && fluidVal >= (dm ? dm.fluid_target : targets.fluid),
+        sleep: sleepLogged && sleepVal >= (dm ? dm.sleep_target : targets.sleep),
+      },
     });
   }
 
-  const daysHit = days.filter(d => d.proteinHit).length;
-  const daysLogged = days.filter(d => d.logged).length;
-  let streak = 0;
-  for(let i=days.length-1; i>=0; i--){
-    if(days[i].proteinHit) streak++; else break;
-  }
-  const avgProtein = daysLogged ? (days.reduce((s,d)=>s+d.protein,0) / daysLogged).toFixed(1) : '0';
+  progressCache = { allDays, targets };
 
+  const showFluidSleep = state.segment !== 'HOME';
   el.innerHTML = `
-    <div class="week-stats">
-      <div class="week-stat"><b style="color:var(--usable);">${daysHit}</b><span>DAYS HIT TARGET</span></div>
-      <div class="week-stat"><b style="color:var(--warn);">${streak}</b><span>DAY STREAK</span></div>
-      <div class="week-stat"><b>${avgProtein}g</b><span>AVG PROTEIN/DAY</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;">
+      <button class="progress-tab active" data-metric="protein" onclick="switchProgressTab('protein')" style="flex:1;padding:10px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border:2px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;white-space:nowrap;">PROTEIN</button>
+      <button class="progress-tab" data-metric="fiber" onclick="switchProgressTab('fiber')" style="flex:1;padding:10px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap;">FIBER</button>
+      ${showFluidSleep ? `<button class="progress-tab" data-metric="fluid" onclick="switchProgressTab('fluid')" style="flex:1;padding:10px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap;">HYDRATION</button>` : ''}
+      ${showFluidSleep ? `<button class="progress-tab" data-metric="sleep" onclick="switchProgressTab('sleep')" style="flex:1;padding:10px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap;">SLEEP</button>` : ''}
     </div>
-    <div class="conf-note" style="margin-bottom:14px;">Compared against your CURRENT target (${targets.protein}g/day). If your weight or training phase changed during this window, earlier days are still shown against today's target, not what applied at the time.</div>
-    <div class="section-lbl">DAY BY DAY</div>
-    <div style="background:var(--panel);border:2px solid var(--ink);padding:14px;text-align:center;margin-bottom:8px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.04em;" id="dayDetailLabel">TAP A DAY BELOW</div>
-      <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:44px;line-height:1.2;" id="dayDetailVal">—</div>
-    </div>
-    <!-- Tappable, not hover-only — hover titles never worked on touchscreens,
-         so the actual daily number was invisible on mobile. Tapping a cell
-         shows its real number in large text above, using the same
-         large-graphic pattern as the daily score card. -->
-    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:8px;">
-      ${days.map((d,i) => `<div onclick="showDayDetail(${i})" data-date="${d.dateStr}" data-protein="${d.protein}" data-logged="${d.logged}" style="aspect-ratio:1;cursor:pointer;background:${d.proteinHit?'var(--usable)':d.logged?'var(--warn)':'#EDECE6'};"></div>`).join('')}
-    </div>
-    <div class="conf-note">Green = hit target · Amber = logged, below target · Gray = not logged. Tap any square for that day's exact number.</div>
+    <div id="progressMetricBody"></div>
   `;
+  renderProgressMetric('protein');
 
-  // Full target-vs-actual charts for all 4 metrics. Protein/fiber can show
-  // history immediately (reconstructed above from logged_meals); fluid/sleep
-  // only exist from the daily_metrics snapshot forward — see the note below
-  // if those look sparse at first.
-  const dailyMetrics = await loadDailyMetrics();
-  const proteinChartData = days.filter(d=>d.logged).map(d => ({ date: d.dateStr, actual: d.protein, target: targets.protein }));
-  const fiberChartData = days.filter(d=>d.logged).map(d => {
-    const dm = dailyMetrics.find(m=>m.date===d.dateStr);
-    return { date: d.dateStr, actual: dm ? dm.fiber_g : (byDay[d.dateStr] ? byDay[d.dateStr].fiber : 0), target: targets.fiber };
+  // Style toggle for active/inactive tabs, since the buttons are built with
+  // inline styles above (matching this file's existing pattern) rather than
+  // a new CSS class system just for this.
+  document.querySelectorAll('.progress-tab').forEach(btn => {
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.progress-tab').forEach(b => {
+        const active = b === this;
+        b.style.background = active ? 'var(--ink)' : 'var(--panel)';
+        b.style.color = active ? '#fff' : 'var(--ink)';
+      });
+    });
   });
+
+  const proteinChartData = allDays.filter(d=>d.logged.protein).map(d => ({ date: d.dateStr, actual: d.value.protein, target: targets.protein }));
+  const fiberChartData = allDays.filter(d=>d.logged.fiber).map(d => ({ date: d.dateStr, actual: d.value.fiber, target: targets.fiber }));
   const fluidChartData = dailyMetrics.filter(d=>d.fluid_l>0 || d.fluid_target).map(d => ({ date: d.date, actual: d.fluid_l, target: d.fluid_target }));
   const sleepChartData = dailyMetrics.filter(d=>d.sleep_h>0 || d.sleep_target).map(d => ({ date: d.date, actual: d.sleep_h, target: d.sleep_target }));
 
@@ -3469,9 +3537,9 @@ async function renderProgress(){
     <div class="section-lbl" style="margin-top:18px;font-size:18px;font-weight:700;color:var(--ink);font-family:'Oswald',sans-serif;letter-spacing:0.01em;">TARGET VS ACTUAL — LAST 30 DAYS</div>
     ${renderMetricChartSVG(proteinChartData, 'Protein', 'g', 0)}
     ${renderMetricChartSVG(fiberChartData, 'Fiber', 'g', 0)}
-    ${state.segment !== 'HOME' ? renderMetricChartSVG(fluidChartData, 'Hydration', 'L', 1) : ''}
-    ${state.segment !== 'HOME' ? renderMetricChartSVG(sleepChartData, 'Sleep', 'h', 1) : ''}
-    ${fluidChartData.length < 3 && state.segment !== 'HOME' ? '<div class="conf-note">Hydration and sleep history only started recording recently — this fills in day by day as you keep using the app.</div>' : ''}
+    ${showFluidSleep ? renderMetricChartSVG(fluidChartData, 'Hydration', 'L', 1) : ''}
+    ${showFluidSleep ? renderMetricChartSVG(sleepChartData, 'Sleep', 'h', 1) : ''}
+    ${fluidChartData.length < 3 && showFluidSleep ? '<div class="conf-note">Hydration and sleep history only started recording recently — this fills in day by day as you keep using the app.</div>' : ''}
   `;
 }
 
