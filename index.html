@@ -49,7 +49,7 @@
   .pillar{border:1.5px solid var(--rule);padding:12px 10px;}
   .pillar .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.04em;margin-bottom:4px;}
   .pillar .val{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1.1;}
-  .pillar .of{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);}
+  .pillar .of{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink-soft);}
   .pillar-bar{height:10px;background:#EDECE6;margin-top:8px;border-radius:5px;overflow:hidden;}
   .pillar-fill{height:100%;transition:width 0.3s;border-radius:5px;}
   .pillar-add{display:flex;gap:4px;margin-top:6px;}
@@ -571,10 +571,19 @@
     </div>
 
     <div class="pillars">
-      <div class="pillar" style="background:var(--claimed-bg);">
-        <div class="lbl">PROTEIN</div>
-        <div class="val"><span id="proteinVal">0</span>g</div>
-        <div class="of">of <span id="proteinTarget">130</span>g</div>
+      <div class="pillar" style="background:var(--claimed-bg);grid-column:span 2;">
+        <div class="lbl">PROTEIN — EATEN VS. USABLE</div>
+        <div style="display:flex;align-items:baseline;gap:16px;">
+          <div>
+            <div class="val" style="color:var(--claimed);font-size:24px;"><span id="proteinClaimedVal">0</span>g</div>
+            <div class="of">EATEN</div>
+          </div>
+          <div style="font-size:20px;color:var(--ink-soft);">→</div>
+          <div>
+            <div class="val" style="font-size:30px;"><span id="proteinVal">0</span>g</div>
+            <div class="of">USABLE, of <span id="proteinTarget">130</span>g target</div>
+          </div>
+        </div>
         <div class="pillar-bar"><div class="pillar-fill" id="proteinBar" style="width:0%;background:var(--claimed);"></div></div>
       </div>
       <div class="pillar" style="background:var(--warn-bg);">
@@ -3453,7 +3462,7 @@ async function renderProgress(){
   const sleepChartData = dailyMetrics.filter(d=>d.sleep_h>0 || d.sleep_target).map(d => ({ date: d.date, actual: d.sleep_h, target: d.sleep_target }));
 
   el.innerHTML += `
-    <div class="section-lbl" style="margin-top:18px;">TARGET VS ACTUAL — LAST 30 DAYS</div>
+    <div class="section-lbl" style="margin-top:18px;font-size:18px;font-weight:700;color:var(--ink);font-family:'Oswald',sans-serif;letter-spacing:0.01em;">TARGET VS ACTUAL — LAST 30 DAYS</div>
     ${renderMetricChartSVG(proteinChartData, 'Protein', 'g', 0)}
     ${renderMetricChartSVG(fiberChartData, 'Fiber', 'g', 0)}
     ${state.segment !== 'HOME' ? renderMetricChartSVG(fluidChartData, 'Hydration', 'L', 1) : ''}
@@ -3696,6 +3705,8 @@ function render(){
   document.getElementById('segBtnHome-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
   document.getElementById('segBtnMenu-RESTAURANT').style.display = showRestaurant ? 'block' : 'none';
   document.getElementById('proteinVal').textContent = proteinSum;
+  const proteinClaimedSum = +state.todayMeals.reduce((s,m)=>s+(m.claimedG||0),0).toFixed(1);
+  document.getElementById('proteinClaimedVal').textContent = proteinClaimedSum;
   const programBadge = document.getElementById('activeProgramBadge');
   if(programBadge){
     const tier = getCurrentTier();
