@@ -46,12 +46,12 @@
   .segment-btn:active{background:var(--usable);color:#fff;}
 
   .pillars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
-  .pillar{background:var(--panel);border:1px solid var(--rule);padding:10px 8px;}
-  .pillar .lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink-soft);letter-spacing:0.04em;margin-bottom:4px;}
-  .pillar .val{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;color:var(--ink);}
-  .pillar .of{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink-soft);}
-  .pillar-bar{height:3px;background:#EDECE6;margin-top:6px;}
-  .pillar-fill{height:100%;transition:width 0.3s;}
+  .pillar{border:1.5px solid var(--rule);padding:12px 10px;}
+  .pillar .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.04em;margin-bottom:4px;}
+  .pillar .val{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1.1;}
+  .pillar .of{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);}
+  .pillar-bar{height:10px;background:#EDECE6;margin-top:8px;border-radius:5px;overflow:hidden;}
+  .pillar-fill{height:100%;transition:width 0.3s;border-radius:5px;}
   .pillar-add{display:flex;gap:4px;margin-top:6px;}
   .pillar-add button{flex:1;font-family:'IBM Plex Mono',monospace;font-size:8px;border:1px solid var(--rule);background:#fbfaf7;padding:3px;cursor:pointer;color:var(--ink-soft);}
 
@@ -107,8 +107,8 @@
 
   .week-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
   .week-stat{text-align:center;background:var(--panel);border:1px solid var(--rule);padding:10px 4px;}
-  .week-stat b{display:block;font-family:'Oswald',sans-serif;font-size:19px;}
-  .week-stat span{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--ink-soft);}
+  .week-stat b{display:block;font-family:'Oswald',sans-serif;font-size:34px;font-weight:700;}
+  .week-stat span{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);font-weight:700;}
   .day-group-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);letter-spacing:0.06em;margin:14px 0 6px;}
 
   .mealslot-card{background:var(--panel);border:1px solid var(--rule);padding:12px;margin-bottom:8px;}
@@ -564,32 +564,38 @@
     <div id="expiryWarningBanner" style="display:none;"></div>
     <div id="homeGreeting" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;"></div>
 
+    <div id="dailyScoreCard" style="display:none;background:var(--panel);border:2px solid var(--ink);padding:16px;margin-bottom:14px;text-align:center;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.06em;margin-bottom:4px;">TODAY'S PROTEIN SCORE</div>
+      <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:56px;line-height:1;" id="dailyScoreVal">—</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;margin-top:4px;" id="dailyScoreTier"></div>
+    </div>
+
     <div class="pillars">
-      <div class="pillar">
+      <div class="pillar" style="background:var(--claimed-bg);">
         <div class="lbl">PROTEIN</div>
         <div class="val"><span id="proteinVal">0</span>g</div>
         <div class="of">of <span id="proteinTarget">130</span>g</div>
         <div class="pillar-bar"><div class="pillar-fill" id="proteinBar" style="width:0%;background:var(--claimed);"></div></div>
       </div>
-      <div class="pillar">
+      <div class="pillar" style="background:var(--warn-bg);">
         <div class="lbl">FIBER</div>
         <div class="val"><span id="fiberVal">0</span>g</div>
         <div class="of">of <span id="fiberTarget">51</span>g</div>
         <div class="pillar-bar"><div class="pillar-fill" id="fiberBar" style="width:0%;background:var(--warn);"></div></div>
         <div class="pillar-add"><button onclick="addFiber(6)">+6g SALAD</button></div>
       </div>
-      <div class="pillar" id="pillarFluid">
+      <div class="pillar" id="pillarFluid" style="background:var(--usable-bg);">
         <div class="lbl">FLUID</div>
         <div class="val"><span id="fluidVal">0.0</span>L</div>
         <div class="of">of <span id="fluidTarget">2.4</span>L</div>
-        <div class="pillar-bar"><div class="pillar-fill" id="fluidBar" style="width:0%;"></div></div>
+        <div class="pillar-bar"><div class="pillar-fill" id="fluidBar" style="width:0%;background:var(--usable);"></div></div>
         <div class="pillar-add" style="display:flex;gap:4px;">
           <button onclick="addFluid(0.3)" style="flex:1;">+300ML</button>
           <input type="number" id="fluidCustomInput" placeholder="ml" style="width:44px;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;">
           <button onclick="addFluidCustom()" style="flex:0 0 auto;padding:3px 6px;">+</button>
         </div>
       </div>
-      <div class="pillar" id="pillarSleep">
+      <div class="pillar" id="pillarSleep" style="background:#E9ECF6;">
         <div class="lbl">SLEEP (last night)</div>
         <div class="val"><span id="sleepVal">0.0</span>h</div>
         <div class="of">of <span id="sleepTarget">8</span>h</div>
@@ -3320,10 +3326,24 @@ function renderNextMealBanner(){
       const suggestionLine = alternative
         ? `Try <strong>${alternative.name}</strong> instead next time — ~${Math.round(alternative.usableG)}g protein, ${Math.round(alternative.fiberG||0)}g fiber, a closer fit for this meal.`
         : `The library doesn't have a closer fit for your diet preference yet — worth checking back as it grows.`;
+      // Buy-ingredient links use each ingredient's real name from the actual
+      // recipe already being scored — genuinely brand-agnostic (a plain
+      // search, not a specific product or seller). Amazon.in specifically,
+      // since it has a stable, public search URL pattern; quick-commerce
+      // apps like Blinkit don't — they require an in-app delivery location
+      // before showing any results, so a stateless link would just dead-end.
+      const buyLinks = alternative
+        ? alternative.recipe.map(([sourceKey]) => {
+            const ingredientName = SOURCES[sourceKey] ? SOURCES[sourceKey].name : sourceKey;
+            const searchUrl = `https://www.amazon.in/s?k=${encodeURIComponent(ingredientName)}`;
+            return `<a href="${searchUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--usable);text-decoration:underline;margin-right:10px;">Buy ${ingredientName}</a>`;
+          }).join('')
+        : '';
       el.innerHTML = `<div class="nextmeal-banner">
         <div class="nextmeal-eyebrow">NEXT UP — ${nextSlot.toUpperCase()}</div>
         <div class="nextmeal-title">You usually have ${usual.name} for ${nextSlot.toLowerCase()}.</div>
         <div class="nextmeal-target">That gives ~${Math.round(usual.avgUsable)}g protein and ${Math.round(usual.avgFiber)}g fiber — a bit short on ${gapType}${aaNote} for this meal. ${suggestionLine}</div>
+        ${buyLinks ? `<div style="margin-top:8px;">${buyLinks}</div>` : ''}
       </div>`;
     }
     return;
@@ -3336,6 +3356,21 @@ function renderNextMealBanner(){
       <div class="nextmeal-target">${proteinRemaining}g protein and ${fiberRemaining}g fiber still needed today, split across ${remainingSlots.length} remaining meal${remainingSlots.length>1?'s':''}</div>
     </div>
   `;
+}
+
+function showDayDetail(index){
+  // Reads straight from the cell's own data attributes rather than keeping
+  // a separate global copy of the days array in sync — one less thing that
+  // could drift out of date with what's actually rendered.
+  const cells = document.querySelectorAll('#progressBody [data-date]');
+  const cell = cells[index];
+  if(!cell) return;
+  const date = cell.getAttribute('data-date');
+  const protein = cell.getAttribute('data-protein');
+  const logged = cell.getAttribute('data-logged') === 'true';
+  const label = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  document.getElementById('dayDetailLabel').textContent = label;
+  document.getElementById('dayDetailVal').textContent = logged ? protein + 'g' : 'Not logged';
 }
 
 async function renderProgress(){
@@ -3390,10 +3425,18 @@ async function renderProgress(){
     </div>
     <div class="conf-note" style="margin-bottom:14px;">Compared against your CURRENT target (${targets.protein}g/day). If your weight or training phase changed during this window, earlier days are still shown against today's target, not what applied at the time.</div>
     <div class="section-lbl">DAY BY DAY</div>
-    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:8px;">
-      ${days.map(d => `<div title="${d.dateStr}: ${d.protein}g" style="aspect-ratio:1;background:${d.proteinHit?'var(--usable)':d.logged?'var(--warn)':'#EDECE6'};"></div>`).join('')}
+    <div style="background:var(--panel);border:2px solid var(--ink);padding:14px;text-align:center;margin-bottom:8px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.04em;" id="dayDetailLabel">TAP A DAY BELOW</div>
+      <div style="font-family:'Oswald',sans-serif;font-weight:700;font-size:44px;line-height:1.2;" id="dayDetailVal">—</div>
     </div>
-    <div class="conf-note">Green = hit target · Amber = logged, below target · Gray = not logged</div>
+    <!-- Tappable, not hover-only — hover titles never worked on touchscreens,
+         so the actual daily number was invisible on mobile. Tapping a cell
+         shows its real number in large text above, using the same
+         large-graphic pattern as the daily score card. -->
+    <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-bottom:8px;">
+      ${days.map((d,i) => `<div onclick="showDayDetail(${i})" data-date="${d.dateStr}" data-protein="${d.protein}" data-logged="${d.logged}" style="aspect-ratio:1;cursor:pointer;background:${d.proteinHit?'var(--usable)':d.logged?'var(--warn)':'#EDECE6'};"></div>`).join('')}
+    </div>
+    <div class="conf-note">Green = hit target · Amber = logged, below target · Gray = not logged. Tap any square for that day's exact number.</div>
   `;
 
   // Full target-vs-actual charts for all 4 metrics. Protein/fiber can show
@@ -3673,6 +3716,28 @@ function render(){
       ? `${state.name}, your daily ${trackedMetrics} targets are set based on your profile.`
       : `Your daily ${trackedMetrics} targets are set based on your profile.`;
   }
+  // Today's Protein Score — the average of today's actual logged meal scores
+  // (each already computed via the real DIAAS-style scoring engine). This is
+  // a practical daily summary, not a re-derivation from raw totals — it
+  // reuses exactly what was already scored per meal rather than introducing
+  // a second, parallel calculation that could drift from the per-meal numbers
+  // shown elsewhere in the app.
+  const scoreCard = document.getElementById('dailyScoreCard');
+  if(scoreCard){
+    if(state.todayMeals.length === 0){
+      scoreCard.style.display = 'none';
+    } else {
+      const avgScore = Math.round(state.todayMeals.reduce((s,m)=>s+(m.score||0),0) / state.todayMeals.length);
+      const tier = tierForScore(avgScore);
+      const tierColor = avgScore >= 100 ? 'var(--usable)' : avgScore >= 85 ? 'var(--warn)' : 'var(--claimed)';
+      document.getElementById('dailyScoreVal').textContent = avgScore;
+      document.getElementById('dailyScoreVal').style.color = tierColor;
+      document.getElementById('dailyScoreTier').textContent = tier;
+      document.getElementById('dailyScoreTier').style.color = tierColor;
+      scoreCard.style.display = 'block';
+    }
+  }
+
   document.getElementById('proteinTarget').textContent = targets.protein;
   document.getElementById('proteinBar').style.width = Math.min(100, proteinSum/targets.protein*100)+'%';
   document.getElementById('proteinBar').style.background = proteinSum>=targets.protein ? 'var(--usable)' : 'var(--claimed)';
