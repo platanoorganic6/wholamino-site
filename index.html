@@ -580,17 +580,35 @@
         </div>
         <div class="pillar-bar"><div class="pillar-fill" id="proteinBar" style="width:0%;background:var(--claimed);"></div></div>
       </div>
-      <div class="pillar" style="background:var(--warn-bg);">
-        <div class="lbl">FIBER</div>
-        <div class="val"><span id="fiberVal">0</span>g</div>
-        <div class="of">of <span id="fiberTarget">51</span>g</div>
+      <div class="pillar" style="background:var(--warn-bg);grid-column:span 2;">
+        <div class="lbl">FIBER — ACTUAL VS. TARGET</div>
+        <div style="display:flex;align-items:baseline;gap:16px;">
+          <div>
+            <div class="val" style="font-size:30px;"><span id="fiberVal">0</span>g</div>
+            <div class="of">ACTUAL</div>
+          </div>
+          <div style="font-size:20px;color:var(--ink-soft);">of</div>
+          <div>
+            <div class="val" style="color:var(--warn);font-size:30px;"><span id="fiberTarget">51</span>g</div>
+            <div class="of">TARGET</div>
+          </div>
+        </div>
         <div class="pillar-bar"><div class="pillar-fill" id="fiberBar" style="width:0%;background:var(--warn);"></div></div>
         <div class="pillar-add"><button onclick="addFiber(6)">+6g SALAD</button></div>
       </div>
-      <div class="pillar" id="pillarFluid" style="background:var(--usable-bg);">
-        <div class="lbl">FLUID</div>
-        <div class="val"><span id="fluidVal">0.0</span>L</div>
-        <div class="of">of <span id="fluidTarget">2.4</span>L</div>
+      <div class="pillar" id="pillarFluid" style="background:var(--usable-bg);grid-column:span 2;">
+        <div class="lbl">FLUID — ACTUAL VS. TARGET</div>
+        <div style="display:flex;align-items:baseline;gap:16px;">
+          <div>
+            <div class="val" style="font-size:30px;"><span id="fluidVal">0.0</span>L</div>
+            <div class="of">ACTUAL</div>
+          </div>
+          <div style="font-size:20px;color:var(--ink-soft);">of</div>
+          <div>
+            <div class="val" style="color:var(--usable);font-size:30px;"><span id="fluidTarget">2.4</span>L</div>
+            <div class="of">TARGET</div>
+          </div>
+        </div>
         <div class="pillar-bar"><div class="pillar-fill" id="fluidBar" style="width:0%;background:var(--usable);"></div></div>
         <div class="pillar-add" style="display:flex;gap:4px;">
           <button onclick="addFluid(0.3)" style="flex:1;">+300ML</button>
@@ -598,10 +616,19 @@
           <button onclick="addFluidCustom()" style="flex:0 0 auto;padding:3px 6px;">+</button>
         </div>
       </div>
-      <div class="pillar" id="pillarSleep" style="background:#E9ECF6;">
-        <div class="lbl">SLEEP (last night)</div>
-        <div class="val"><span id="sleepVal">0.0</span>h</div>
-        <div class="of">of <span id="sleepTarget">8</span>h</div>
+      <div class="pillar" id="pillarSleep" style="background:#E9ECF6;grid-column:span 2;">
+        <div class="lbl">SLEEP (LAST NIGHT) — ACTUAL VS. TARGET</div>
+        <div style="display:flex;align-items:baseline;gap:16px;">
+          <div>
+            <div class="val" style="font-size:30px;"><span id="sleepVal">0.0</span>h</div>
+            <div class="of">ACTUAL</div>
+          </div>
+          <div style="font-size:20px;color:var(--ink-soft);">of</div>
+          <div>
+            <div class="val" style="color:#5B6FA8;font-size:30px;"><span id="sleepTarget">8</span>h</div>
+            <div class="of">TARGET</div>
+          </div>
+        </div>
         <div class="pillar-bar"><div class="pillar-fill" id="sleepBar" style="width:0%;background:#5B6FA8;"></div></div>
         <div class="pillar-add"><input type="number" step="0.5" id="sleepInput" placeholder="hrs" style="width:100%;border:1px solid var(--rule);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px;text-align:center;" oninput="setSleep(this.value)"></div>
       </div>
